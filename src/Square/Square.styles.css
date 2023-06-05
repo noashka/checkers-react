@@ -1,0 +1,67 @@
+.square {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff;
+  user-select: none;
+}
+
+.square.dark {
+  background-color: #000;
+}
+
+.square.available:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 128, 0, 0.5);
+  pointer-events: none;
+}
+
+.figure {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-image: radial-gradient(circle, yellow, orange);
+  cursor: grab;
+  opacity: 1;
+  border: 2px solid orange;
+  overflow: hidden;
+  user-select: none;
+  pointer-events: none;
+}
+
+.figure.grabbing {
+  cursor: grabbing;
+}
+
+.figure.dark {
+  background-image: radial-gradient(circle, blue, darkblue);
+  border-color: darkblue;
+  pointer-events: initial;
+}
+
+.figure.queen {
+  background-image: radial-gradient(circle, yellow, red);
+}
+
+.figure.queen.dark {
+  background-image: radial-gradient(circle, white, darkblue);
+}
+
+/* .figure.active {
+  pointer-events: initial;
+} */
+
+.hidden-drag-ghost {
+  position: absolute;
+  top: 0;
+  left: 0;
+  visibility: hidden;
+}
