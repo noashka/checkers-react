@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Board from './Board';
-import { findPlayerAvailableMoves, fillBoard, makeAmove } from './helpers/utls';
+import { findPlayerAvailableMoves, fillBoard, makeAmove } from './domain/utils';
 import minimax from './domain/minimax';
 import Node from './entities/Node';
 import CellModel from './entities/CellModel';
@@ -70,8 +70,8 @@ const App = () => {
   };
 
   const handlePlayerTurn = (currentCell: CellModel, targetPosition: PositionCellType) => {
-    let copy: CellModel[][] = JSON.parse(JSON.stringify(state.board));
-    const availableMoves = findPlayerAvailableMoves(copy);
+    let copy: CellModel[][] = [];
+    const availableMoves = findPlayerAvailableMoves(state.board);
 
     if (availableMoves.length === 0) {
       return state.playerPieces > state.computerPieces ? alert('No available moves') : alert('YOU LOSE');
@@ -84,7 +84,7 @@ const App = () => {
     const newMove = [currentX, currentY, targetX, targetY].toString();
 
     if (availableMoves.some((move) => move.toString() === newMove)) {
-      copy = makeAmove({ board: copy, currentX, currentY, targetX, targetY, bigLetter: 'B' });
+      copy = makeAmove({ board: state.board, currentX, currentY, targetX, targetY, bigLetter: 'B' });
       const { playerPieces, computerPieces } = calculatePieces(copy);
 
       setState((state) => ({
