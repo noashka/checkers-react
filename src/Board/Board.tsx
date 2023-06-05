@@ -1,8 +1,9 @@
 import React, { useRef, useState } from 'react';
-import { findPlayerAvailableMoves } from '../helpers/utls';
+import { findPlayerAvailableMoves } from '../domain/utils';
 import Square from '../Square';
 import './Board.styles.css';
 import CellModel from '../entities/CellModel';
+import useDragGhost from '../hooks/useDragGhost';
 import { InitialStateType, PositionCellType } from '../types';
 
 const BOARD_CELL_COUNT = 8;
@@ -17,15 +18,11 @@ type Props = {
 const Board = ({ board, handlePlayerTurn, setState }: Props) => {
   // Handle Safari and Firefox [clientX clientY] positions
   const clientCoordinates = useRef<number[]>([0, 0]);
-  let dragGhost = useRef(null);
+  const { createDragGhost, resetDragGhost } = useDragGhost();
   const [possibleMoves, setPossibleMoves] = useState([]);
 
   const dragStart = (cell: CellModel) => (e: React.DragEvent<HTMLDivElement>) => {
-    dragGhost.current = (e.target as HTMLDivElement).cloneNode(true);
-    document.body.appendChild(dragGhost.current);
-    e.dataTransfer.setDragImage(dragGhost.current, 0, 0);
-    dragGhost.current.classList.add('hidden-drag-ghost');
-
+    createDragGhost(e);
     const availableMoves = findPlayerAvailableMoves(board);
     const moves = availableMoves.filter((item: number[]) => item[0] === cell.x && item[1] === cell.y);
     // handle required moves
@@ -33,8 +30,7 @@ const Board = ({ board, handlePlayerTurn, setState }: Props) => {
   };
 
   const dragEnd = (cell: CellModel) => (_e: React.DragEvent<HTMLDivElement>) => {
-    dragGhost.current.parentNode.removeChild(dragGhost.current);
-    dragGhost.current = null;
+    resetDragGhost();
     const elemBelow = document.elementFromPoint(
       clientCoordinates.current[0],
       clientCoordinates.current[1],

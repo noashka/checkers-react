@@ -1,4 +1,4 @@
-import { Label } from './constants';
+import { Label } from '../helpers/constants';
 import CellModel from '../entities/CellModel';
 
 export const fillBoard = (board: CellModel[][]): CellModel[][] => {

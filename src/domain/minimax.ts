@@ -11,8 +11,7 @@ const minimax = (
 ): number => {
   if (depth === 0) return calculateHeuristics(board);
 
-  const copy = JSON.parse(JSON.stringify(board));
-  const currentState = new Node(copy);
+  const currentState = new Node(board);
   if (maximizingPlayer) {
     let maxEval = -Infinity;
     const children = currentState.getChildren(true);

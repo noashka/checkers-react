@@ -3,11 +3,6 @@ import cn from 'classnames';
 import { Label } from '../helpers/constants';
 import './Square.styles.css';
 
-export enum Labels {
-  Light = 'white',
-  Dark = 'black',
-}
-
 type Props = {
   cell: any;
   onDragStart: (e: React.DragEvent<HTMLDivElement>) => void;

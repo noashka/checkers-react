@@ -1,4 +1,4 @@
-import { findAvailableMoves, findPlayerAvailableMoves, makeAmove } from '../helpers/utls';
+import { findAvailableMoves, findPlayerAvailableMoves, makeAmove } from '../domain/utils';
 import CellModel from './CellModel';
 
 export default class Node {
@@ -31,8 +31,7 @@ export default class Node {
       const currentY = availableMoves[i][1];
       const targetX = availableMoves[i][2];
       const targetY = availableMoves[i][3];
-      let copy = JSON.parse(JSON.stringify(this.board));
-      copy = makeAmove({ board: copy, currentX, currentY, targetX, targetY, bigLetter, queenRow });
+      const copy = makeAmove({ board: this.board, currentX, currentY, targetX, targetY, bigLetter, queenRow });
       childrenStates.push(new Node(copy, [currentX, currentY, targetX, targetY]));
     }
 
