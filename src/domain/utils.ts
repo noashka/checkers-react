@@ -1,9 +1,11 @@
 import { Label } from '../helpers/constants';
 import CellModel from '../entities/CellModel';
 
-export const fillBoard = (board: CellModel[][]): CellModel[][] => {
-  for (let i = 0; i < 8; i++) {
-    for (let j = 0; j < 8; j++) {
+export const fillBoard = (size = 8): CellModel[][] => {
+  const board = Array.from({ length: size }, () => []);
+
+  for (let i = 0; i < size; i++) {
+    for (let j = 0; j < size; j++) {
       const label = (i + j) % 2 !== 0 ? Label.Dark : Label.Light;
       board[i][j] = new CellModel(label, '', i, j);
 

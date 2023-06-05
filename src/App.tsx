@@ -6,7 +6,7 @@ import Node from './entities/Node';
 import CellModel from './entities/CellModel';
 import { InitialStateType, PositionCellType } from './types';
 
-const initialBoard = fillBoard([[], [], [], [], [], [], [], []]);
+const initialBoard = fillBoard();
 const initialState: InitialStateType = {
   board: initialBoard,
   playerTurn: true,
