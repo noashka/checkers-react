@@ -1,4 +1,4 @@
-import { Label } from '../helpers/constants';
+import { Label, Figure } from '../helpers/constants';
 import CellModel from '../entities/CellModel';
 
 export const fillBoard = (size = 8): CellModel[][] => {
@@ -10,11 +10,11 @@ export const fillBoard = (size = 8): CellModel[][] => {
       board[i][j] = new CellModel(label, '', i, j);
 
       if (i < 3 && (i + j) % 2 === 1) {
-        board[i][j] = new CellModel(label, `c${i}${j}`, i, j);
+        board[i][j] = new CellModel(label, Figure.computer, i, j);
       }
 
       if (i > 4 && (i + j) % 2 === 1) {
-        board[i][j] = new CellModel(label, `b${i}${j}`, i, j);
+        board[i][j] = new CellModel(label, Figure.player, i, j);
       }
     }
   }
@@ -37,7 +37,8 @@ const checkPlayerMoves = (
 
   if (board[targetX][targetY].figure) return false;
 
-  if (board[currentX][currentY].figure[0] === 'c' || board[currentX][currentY].figure[0] === 'C') return false;
+  if (board[currentX][currentY].figure === Figure.computer || board[currentX][currentY].figure === Figure.Computer)
+    return false;
 
   if (!board[targetX][targetY].figure) return true;
 };
@@ -57,13 +58,14 @@ const checkPlayerJumps = (
 
   if (board[crossX][crossY].figure === '') return false;
 
-  if (board[crossX][crossY].figure[0] === 'B' || board[crossX][crossY].figure[0] === 'b') return false;
+  if (board[crossX][crossY].figure === Figure.Player || board[crossX][crossY].figure === Figure.player) return false;
 
   if (board[targetX][targetY].figure) return false;
 
   if (board[currentX][currentY].figure === '') return false;
 
-  if (board[currentX][currentY].figure[0] === 'c' || board[currentX][currentY].figure[0] === 'C') return false;
+  if (board[currentX][currentY].figure === Figure.computer || board[currentX][currentY].figure === Figure.Computer)
+    return false;
 
   return true;
 };
@@ -74,12 +76,12 @@ export const findPlayerAvailableMoves = (board: CellModel[][]) => {
 
   for (let m = 0; m < 8; m++) {
     for (let n = 0; n < 8; n++) {
-      if (board[m][n].figure[0] === 'b') {
+      if (board[m][n].figure === Figure.player) {
         if (checkPlayerMoves(board, m, n, m - 1, n - 1)) availableMoves.push([m, n, m - 1, n - 1]);
         if (checkPlayerMoves(board, m, n, m - 1, n + 1)) availableMoves.push([m, n, m - 1, n + 1]);
         if (checkPlayerJumps(board, m, n, m - 1, n - 1, m - 2, n - 2)) availableJumps.push([m, n, m - 2, n - 2]);
         if (checkPlayerJumps(board, m, n, m - 1, n + 1, m - 2, n + 2)) availableJumps.push([m, n, m - 2, n + 2]);
-      } else if (board[m][n].figure[0] === 'B') {
+      } else if (board[m][n].figure === Figure.Player) {
         if (checkPlayerMoves(board, m, n, m - 1, n - 1)) availableMoves.push([m, n, m - 1, n - 1]);
         if (checkPlayerMoves(board, m, n, m - 1, n + 1)) availableMoves.push([m, n, m - 1, n + 1]);
         if (checkPlayerJumps(board, m, n, m - 1, n - 1, m - 2, n - 2)) availableJumps.push([m, n, m - 2, n - 2]);
@@ -113,7 +115,7 @@ const checkJumps = (
   if (!board[crossX][crossY].figure) {
     return false;
   }
-  if (board[crossX][crossY].figure[0] === 'C' || board[crossX][crossY].figure[0] === 'c') {
+  if (board[crossX][crossY].figure === Figure.Computer || board[crossX][crossY].figure === Figure.computer) {
     return false;
   }
   if (board[targetX][targetY].figure) {
@@ -122,7 +124,7 @@ const checkJumps = (
   if (!board[currentX][currentY].figure) {
     return false;
   }
-  if (board[currentX][currentY].figure[0] === 'b' || board[currentX][currentY].figure[0] === 'B') {
+  if (board[currentX][currentY].figure === Figure.player || board[currentX][currentY].figure === Figure.Player) {
     return false;
   }
 
@@ -138,7 +140,7 @@ const checkMoves = (board: CellModel[][], currentX: number, currentY: number, ta
 
   if (board[targetX][targetY].figure) return false;
 
-  if (board[currentX][currentY].figure[0] === 'B') return false;
+  if (board[currentX][currentY].figure === Figure.Player) return false;
 
   if (!board[targetX][targetY].figure) return true;
 };
@@ -149,7 +151,7 @@ export const findAvailableMoves = (board: CellModel[][]) => {
 
   for (let m = 0; m < 8; m++) {
     for (let n = 0; n < 8; n++) {
-      if (board[m][n].figure[0] === 'c') {
+      if (board[m][n].figure === Figure.computer) {
         if (checkMoves(board, m, n, m + 1, n + 1)) {
           availableMoves.push([m, n, m + 1, n + 1]);
         }
@@ -162,7 +164,7 @@ export const findAvailableMoves = (board: CellModel[][]) => {
         if (checkJumps(board, m, n, m + 1, n + 1, m + 2, n + 2)) {
           availableJumps.push([m, n, m + 2, n + 2]);
         }
-      } else if (board[m][n].figure[0] === 'C') {
+      } else if (board[m][n].figure === Figure.Computer) {
         if (checkMoves(board, m, n, m + 1, n + 1)) availableMoves.push([m, n, m + 1, n + 1]);
         if (checkMoves(board, m, n, m + 1, n - 1)) availableMoves.push([m, n, m + 1, n - 1]);
         if (checkMoves(board, m, n, m - 1, n - 1)) availableMoves.push([m, n, m - 1, n - 1]);
@@ -184,7 +186,7 @@ export const makeAmove = ({
   currentY,
   targetX,
   targetY,
-  bigLetter,
+  king,
   queenRow = 0,
 }: {
   board: CellModel[][];
@@ -192,33 +194,33 @@ export const makeAmove = ({
   currentY: number;
   targetX: number;
   targetY: number;
-  bigLetter: string;
+  king: string;
   queenRow?: number;
 }): CellModel[][] => {
-  const copy = JSON.parse(JSON.stringify(board));
+  const newBoard = JSON.parse(JSON.stringify(board));
 
-  let letter = copy[currentX][currentY].figure[0];
+  let { figure } = newBoard[currentX][currentY];
   let dx = currentX - targetX;
   let dy = currentY - targetY;
 
   if (dx === -2 && dy === 2) {
-    copy[currentX + 1][currentY - 1].figure = '';
+    newBoard[currentX + 1][currentY - 1].figure = '';
   } else if (dx === 2 && dy === 2) {
-    copy[currentX - 1][currentY - 1].figure = '';
+    newBoard[currentX - 1][currentY - 1].figure = '';
   } else if (dx == 2 && dy == -2) {
-    copy[currentX - 1][currentY + 1].figure = '';
+    newBoard[currentX - 1][currentY + 1].figure = '';
   } else if (dx == -2 && dy == -2) {
-    copy[currentX + 1][currentY + 1].figure = '';
+    newBoard[currentX + 1][currentY + 1].figure = '';
   }
 
   if (Number(targetX) === queenRow) {
-    letter = bigLetter;
+    figure = king;
   }
 
-  copy[currentX][currentY].figure = '';
-  copy[Number(targetX)][targetY].figure = `${letter}${targetX}${targetY}`;
+  newBoard[currentX][currentY].figure = '';
+  newBoard[Number(targetX)][targetY].figure = figure;
 
-  return copy;
+  return newBoard;
 };
 
 export const calculatePieces = (board: CellModel[][]) => {
@@ -228,9 +230,9 @@ export const calculatePieces = (board: CellModel[][]) => {
   for (let i = 0; i < board.length; i++) {
     for (let j = 0; j < board[i].length; j++) {
       const cell = board[i][j];
-      if (cell.figure[0] === 'b' || cell.figure[0] === 'B') {
+      if (cell.figure === Figure.player || cell.figure === Figure.Player) {
         playerPieces++;
-      } else if (cell.figure[0] === 'c' || cell.figure[0] === 'C') {
+      } else if (cell.figure === Figure.computer || cell.figure === Figure.Computer) {
         computerPieces++;
       }
     }
