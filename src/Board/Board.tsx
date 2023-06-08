@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, memo } from 'react';
 import { findPlayerAvailableMoves } from '../domain/utils';
 import Square from '../Square';
 import './Board.styles.css';
@@ -12,10 +12,10 @@ const BOARD_LABELS = Array.from(Array(BOARD_CELL_COUNT).keys());
 type Props = {
   board: CellModel[][];
   handlePlayerTurn: (cell: CellModel, targetPosition: PositionCellType | DOMStringMap) => void;
-  setState: (fn: (state: InitialStateType) => InitialStateType) => void;
+  updateTargetPosition: (payload: Partial<InitialStateType>) => void;
 };
 
-const Board = ({ board, handlePlayerTurn, setState }: Props) => {
+const Board = ({ board, handlePlayerTurn, updateTargetPosition }: Props) => {
   // Handle Safari and Firefox [clientX clientY] positions
   const clientCoordinates = useRef<number[]>([0, 0]);
   const { createDragGhost, resetDragGhost } = useDragGhost();
@@ -38,11 +38,10 @@ const Board = ({ board, handlePlayerTurn, setState }: Props) => {
 
     setPossibleMoves([]);
     if (elemBelow.dataset.x) {
-      setState((state) => ({
-        ...state,
+      updateTargetPosition({
         targetPosition: elemBelow.dataset.x,
         currentCell: cell,
-      }));
+      });
 
       handlePlayerTurn(cell, elemBelow.dataset);
       clientCoordinates.current = [0, 0];
@@ -94,4 +93,4 @@ const Board = ({ board, handlePlayerTurn, setState }: Props) => {
   );
 };
 
-export default Board;
+export default memo(Board);

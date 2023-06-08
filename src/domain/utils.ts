@@ -220,3 +220,21 @@ export const makeAmove = ({
 
   return copy;
 };
+
+export const calculatePieces = (board: CellModel[][]) => {
+  let playerPieces = 0;
+  let computerPieces = 0;
+
+  for (let i = 0; i < board.length; i++) {
+    for (let j = 0; j < board[i].length; j++) {
+      const cell = board[i][j];
+      if (cell.figure[0] === 'b' || cell.figure[0] === 'B') {
+        playerPieces++;
+      } else if (cell.figure[0] === 'c' || cell.figure[0] === 'C') {
+        computerPieces++;
+      }
+    }
+  }
+
+  return { playerPieces, computerPieces };
+};
