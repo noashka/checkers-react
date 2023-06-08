@@ -1,24 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import Board from './Board';
-import { findPlayerAvailableMoves, fillBoard, makeAmove } from './domain/utils';
+import { findPlayerAvailableMoves, makeAmove, calculatePieces } from './domain/utils';
 import minimax from './domain/minimax';
 import Node from './entities/Node';
 import CellModel from './entities/CellModel';
-import { InitialStateType, PositionCellType } from './types';
-
-const initialBoard = fillBoard();
-const initialState: InitialStateType = {
-  board: initialBoard,
-  playerTurn: true,
-  computerPieces: 12,
-  playerPieces: 12,
-  availableMoves: findPlayerAvailableMoves(initialBoard),
-  targetPosition: null,
-  currentCell: null,
-};
+import { PositionCellType } from './types';
+import delay from './helpers/delay';
+import useCheckersState from './hooks/useCheckersState';
 
 const App = () => {
-  const [state, setState] = useState(initialState);
+  const { state, updateComputerTurn, updatePlayerTurn, resetState, updateTargetPosition } = useCheckersState();
   const [computerNotification, setComputerNotification] = useState('');
 
   useEffect(() => {
@@ -26,11 +17,12 @@ const App = () => {
 
     if (state.playerTurn) {
       handlePlayerTurn(state.currentCell, state.targetPosition);
-    } else {
-      setTimeout(() => {
-        handleComputerTurn();
-      }, 100);
+      return;
     }
+
+    delay(200).then(() => {
+      handleComputerTurn();
+    });
   }, [state.playerTurn]);
 
   useEffect(() => {
@@ -48,61 +40,43 @@ const App = () => {
   }, [state.playerPieces, state.computerPieces]);
 
   const restart = () => {
-    setState(initialState);
+    resetState();
+    setComputerNotification('');
   };
 
-  const calculatePieces = (board: CellModel[][]) => {
-    let playerPieces = 0;
-    let computerPieces = 0;
+  const handlePlayerTurn = useCallback(
+    (currentCell: CellModel, targetPosition: PositionCellType) => {
+      let newBoard: CellModel[][] = [];
+      const availableMoves = findPlayerAvailableMoves(state.board);
 
-    for (let i = 0; i < board.length; i++) {
-      for (let j = 0; j < board[i].length; j++) {
-        const cell = board[i][j];
-        if (cell.figure[0] === 'b' || cell.figure[0] === 'B') {
-          playerPieces++;
-        } else if (cell.figure[0] === 'c' || cell.figure[0] === 'C') {
-          computerPieces++;
-        }
+      if (availableMoves.length === 0) {
+        return state.playerPieces > state.computerPieces ? alert('No available moves') : alert('YOU LOSE');
       }
-    }
 
-    return { playerPieces, computerPieces };
-  };
+      const currentX = currentCell.x;
+      const currentY = currentCell.y;
+      const targetX = Number(targetPosition.x);
+      const targetY = Number(targetPosition.y);
+      const newMove = [currentX, currentY, targetX, targetY].toString();
 
-  const handlePlayerTurn = (currentCell: CellModel, targetPosition: PositionCellType) => {
-    let copy: CellModel[][] = [];
-    const availableMoves = findPlayerAvailableMoves(state.board);
+      if (availableMoves.some((move) => move.toString() === newMove)) {
+        newBoard = makeAmove({ board: state.board, currentX, currentY, targetX, targetY, bigLetter: 'B' });
+        const { playerPieces, computerPieces } = calculatePieces(newBoard);
 
-    if (availableMoves.length === 0) {
-      return state.playerPieces > state.computerPieces ? alert('No available moves') : alert('YOU LOSE');
-    }
+        updatePlayerTurn({
+          playerPieces,
+          computerPieces,
+          availableMoves,
+          board: newBoard,
+        });
+      }
+    },
+    [state],
+  );
 
-    const currentX = currentCell.x;
-    const currentY = currentCell.y;
-    const targetX = Number(targetPosition.x);
-    const targetY = Number(targetPosition.y);
-    const newMove = [currentX, currentY, targetX, targetY].toString();
-
-    if (availableMoves.some((move) => move.toString() === newMove)) {
-      copy = makeAmove({ board: state.board, currentX, currentY, targetX, targetY, bigLetter: 'B' });
-      const { playerPieces, computerPieces } = calculatePieces(copy);
-
-      setState((state) => ({
-        ...state,
-        playerPieces,
-        computerPieces,
-        currentCell: null,
-        targetPosition: null,
-        playerTurn: false,
-        availableMoves,
-        board: copy,
-      }));
-    }
-  };
-
-  const handleComputerTurn = () => {
-    const currentState = new Node(state.board);
-    const firstComputerMoves = currentState.getChildren(true);
+  const handleComputerTurn = useCallback(() => {
+    const currentBoardState = new Node(state.board);
+    const firstComputerMoves = currentBoardState.getChildren(true);
 
     if (firstComputerMoves.length === 0) {
       if (state.playerPieces > state.computerPieces) {
@@ -132,20 +106,18 @@ const App = () => {
       return;
     }
 
-    const newMatrix = dict[minimaxKeys[0]].getBoard();
+    const updatedBoard = dict[minimaxKeys[0]].getBoard();
     let move = dict[minimaxKeys[0]].move;
     setComputerNotification(`from [${move[0]}, ${move[1]}] to [${move[2]}, ${move[3]}]`);
 
-    const { playerPieces, computerPieces } = calculatePieces(newMatrix);
+    const { playerPieces, computerPieces } = calculatePieces(updatedBoard);
 
-    setState((state) => ({
-      ...state,
-      board: newMatrix,
-      playerTurn: true,
+    updateComputerTurn({
+      board: updatedBoard,
       playerPieces,
       computerPieces,
-    }));
-  };
+    });
+  }, [state.board]);
 
   return (
     <div>
@@ -158,7 +130,7 @@ const App = () => {
         </ul>
         <p>Computer moves - {computerNotification}</p>
       </div>
-      <Board handlePlayerTurn={handlePlayerTurn} setState={setState} board={state.board} />
+      <Board handlePlayerTurn={handlePlayerTurn} updateTargetPosition={updateTargetPosition} board={state.board} />
     </div>
   );
 };
