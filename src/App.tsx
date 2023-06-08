@@ -7,6 +7,7 @@ import CellModel from './entities/CellModel';
 import { PositionCellType } from './types';
 import delay from './helpers/delay';
 import useCheckersState from './hooks/useCheckersState';
+import { Figure } from './helpers/constants';
 
 const App = () => {
   const { state, updateComputerTurn, updatePlayerTurn, resetState, updateTargetPosition } = useCheckersState();
@@ -60,7 +61,7 @@ const App = () => {
       const newMove = [currentX, currentY, targetX, targetY].toString();
 
       if (availableMoves.some((move) => move.toString() === newMove)) {
-        newBoard = makeAmove({ board: state.board, currentX, currentY, targetX, targetY, bigLetter: 'B' });
+        newBoard = makeAmove({ board: state.board, currentX, currentY, targetX, targetY, king: Figure.Player });
         const { playerPieces, computerPieces } = calculatePieces(newBoard);
 
         updatePlayerTurn({

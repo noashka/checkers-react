@@ -1,3 +1,4 @@
+import { Figure } from '../helpers/constants';
 import { fillBoard, findPlayerAvailableMoves, findAvailableMoves, makeAmove } from './utils';
 
 const board = fillBoard(8);
@@ -24,7 +25,7 @@ describe('test domain utils', () => {
   });
 
   it('should make a move', () => {
-    const result = makeAmove({ board, currentX: 5, currentY: 0, targetX: 4, targetY: 1, bigLetter: 'B' });
+    const result = makeAmove({ board, currentX: 5, currentY: 0, targetX: 4, targetY: 1, king: Figure.Player });
     const currentCell = result[5][0];
     const nextCell = result[4][1];
 

@@ -1,13 +1,13 @@
-import { Label } from '../helpers/constants';
+import { Label, Figure } from '../helpers/constants';
 
 export default class CellModel {
   label: Label;
-  figure: string; // c01, C01, b70, B70
+  figure: Figure | '';
   x: number;
   y: number;
   key: string;
 
-  constructor(label: Label, figure: string, x: number, y: number) {
+  constructor(label: Label, figure: Figure | '', x: number, y: number) {
     this.label = label;
     this.figure = figure;
     this.key = `${x}_${y}`;

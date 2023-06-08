@@ -1,6 +1,6 @@
-import React, { DragEvent, useRef } from 'react';
+import React from 'react';
 import cn from 'classnames';
-import { Label } from '../helpers/constants';
+import { Label, Figure } from '../helpers/constants';
 import './Square.styles.css';
 
 type Props = {
@@ -28,8 +28,8 @@ const Square = ({ cell, onDragStart, onDragEnd, onDragOver, available }: Props) 
         <span
           draggable
           className={cn('figure', {
-            dark: cell.figure[0] === 'b' || cell.figure[0] === 'B',
-            queen: cell.figure[0] === 'B' || cell.figure[0] === 'C',
+            dark: cell.figure === Figure.player || cell.figure === Figure.Player,
+            queen: cell.figure === Figure.Player || cell.figure === Figure.Computer,
           })}
         />
       ) : null}
