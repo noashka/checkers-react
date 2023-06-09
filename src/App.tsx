@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import Board from './Board';
-import { findPlayerAvailableMoves, makeAmove, calculatePieces } from './domain/utils';
+import { findPlayerAvailableMoves, makeAmove, shouldPlayerJump, shouldJump } from './domain/utils';
 import minimax from './domain/minimax';
 import Node from './entities/Node';
 import CellModel from './entities/CellModel';
@@ -62,10 +62,10 @@ const App = () => {
 
       if (availableMoves.some((move) => move.toString() === newMove)) {
         newBoard = makeAmove({ board: state.board, currentX, currentY, targetX, targetY, king: Figure.Player });
-        const { playerPieces, computerPieces } = calculatePieces(newBoard);
+        let computerPieces = state.computerPieces;
+        if (shouldPlayerJump(state.board, currentX, currentY)) computerPieces--;
 
         updatePlayerTurn({
-          playerPieces,
           computerPieces,
           availableMoves,
           board: newBoard,
@@ -109,14 +109,13 @@ const App = () => {
 
     const updatedBoard = dict[minimaxKeys[0]].getBoard();
     let move = dict[minimaxKeys[0]].move;
+    let playerPieces = state.playerPieces;
     setComputerNotification(`from [${move[0]}, ${move[1]}] to [${move[2]}, ${move[3]}]`);
-
-    const { playerPieces, computerPieces } = calculatePieces(updatedBoard);
+    if (shouldJump(state.board, move[0], move[1])) playerPieces--;
 
     updateComputerTurn({
       board: updatedBoard,
-      playerPieces,
-      computerPieces,
+      playerPieces: playerPieces,
     });
   }, [state.board]);
 
