@@ -31,7 +31,6 @@ const checkersReducer = (state: InitialStateType, action: ActionType<Partial<Ini
         playerTurn: true,
         board: action.payload.board,
         playerPieces: action.payload.playerPieces,
-        computerPieces: action.payload.computerPieces,
       };
     case UPDATE_PLAYER_TURN:
       return {
@@ -39,7 +38,6 @@ const checkersReducer = (state: InitialStateType, action: ActionType<Partial<Ini
         currentCell: null,
         targetPosition: null,
         playerTurn: false,
-        playerPieces: action.payload.playerPieces,
         computerPieces: action.payload.computerPieces,
         availableMoves: action.payload.availableMoves,
         board: action.payload.board,

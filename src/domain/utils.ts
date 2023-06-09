@@ -131,6 +131,34 @@ const checkJumps = (
   return true;
 };
 
+export const shouldJump = (board: CellModel[][], x: number, y: number) => {
+  if (board[x][y].figure === Figure.computer) {
+    if (checkJumps(board, x, y, x + 1, y - 1, x + 2, y - 2)) return true; // ↙️
+    if (checkJumps(board, x, y, x + 1, y + 1, x + 2, y + 2)) return true; // ↘️
+  } else if (board[x][y].figure === Figure.Computer) {
+    if (checkJumps(board, x, y, x + 1, y - 1, x + 2, y - 2)) return true; // ↙️
+    if (checkJumps(board, x, y, x + 1, y + 1, x + 2, y + 2)) return true; // ↘️
+    if (checkJumps(board, x, y, x - 1, y - 1, x - 2, y - 2)) return true; // ↖️
+    if (checkJumps(board, x, y, x - 1, y + 1, x - 2, y + 2)) return true; // ↗️
+  }
+
+  return false;
+};
+
+export const shouldPlayerJump = (board: CellModel[][], x: number, y: number) => {
+  if (board[x][y].figure === Figure.player) {
+    if (checkPlayerJumps(board, x, y, x - 1, y + 1, x - 2, y + 2)) return true; // ↗️
+    if (checkPlayerJumps(board, x, y, x - 1, y - 1, x - 2, y - 2)) return true; // ↖️
+  } else if (board[x][y].figure === Figure.Player) {
+    if (checkPlayerJumps(board, x, y, x - 1, y + 1, x - 2, y + 2)) return true; // ↗️
+    if (checkPlayerJumps(board, x, y, x - 1, y - 1, x - 2, y - 2)) return true; // ↖️
+    if (checkPlayerJumps(board, x, y, x + 1, y - 1, x + 2, y - 2)) return true; // ↙️
+    if (checkPlayerJumps(board, x, y, x + 1, y + 1, x + 2, y + 2)) return true; // ↘️
+  }
+
+  return false;
+};
+
 const checkMoves = (board: CellModel[][], currentX: number, currentY: number, targetX: number, targetY: number) => {
   if (targetX > 7 || targetX < 0) return false;
 
@@ -221,22 +249,4 @@ export const makeAmove = ({
   newBoard[Number(targetX)][targetY].figure = figure;
 
   return newBoard;
-};
-
-export const calculatePieces = (board: CellModel[][]) => {
-  let playerPieces = 0;
-  let computerPieces = 0;
-
-  for (let i = 0; i < board.length; i++) {
-    for (let j = 0; j < board[i].length; j++) {
-      const cell = board[i][j];
-      if (cell.figure === Figure.player || cell.figure === Figure.Player) {
-        playerPieces++;
-      } else if (cell.figure === Figure.computer || cell.figure === Figure.Computer) {
-        computerPieces++;
-      }
-    }
-  }
-
-  return { playerPieces, computerPieces };
 };
