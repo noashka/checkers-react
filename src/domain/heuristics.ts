@@ -1,5 +1,45 @@
 import { Figure } from '../helpers/constants';
 import CellModel from '../entities/CellModel';
+import { inBounds, sideOf, Side } from './utils';
+
+const MATERIAL_WEIGHT = 1000;
+const MAN_WEIGHT = 5;
+const KING_WEIGHT = 10;
+const EDGE_BONUS = 7;
+const THREAT_PENALTY = 3;
+const ATTACK_BONUS = 6;
+
+const COMPUTER_FORWARD = [
+  [1, -1],
+  [1, 1],
+];
+
+const isSideAt = (board: CellModel[][], x: number, y: number, side: Side) =>
+  inBounds(board, x, y) && sideOf(board[x][y].figure) === side;
+
+const isPlayerKingAt = (board: CellModel[][], x: number, y: number) =>
+  inBounds(board, x, y) && board[x][y].figure === Figure.PlayerKing;
+
+// the landing square of a jump has to be on the board as well as free
+const isEmptyAt = (board: CellModel[][], x: number, y: number) => inBounds(board, x, y) && !board[x][y].figure;
+
+/** How many opposing pieces could capture the computer piece on (i, j) */
+const countThreats = (board: CellModel[][], i: number, j: number) => {
+  let threats = 0;
+
+  if (isSideAt(board, i + 1, j - 1, 'player') && isEmptyAt(board, i - 1, j + 1)) threats++;
+  if (isSideAt(board, i + 1, j + 1, 'player') && isEmptyAt(board, i - 1, j - 1)) threats++;
+  if (isPlayerKingAt(board, i - 1, j - 1) && isEmptyAt(board, i + 1, j + 1)) threats++;
+  if (isPlayerKingAt(board, i - 1, j + 1) && isEmptyAt(board, i + 1, j - 1)) threats++;
+
+  return threats;
+};
+
+/** How many opposing pieces the computer piece on (i, j) could capture */
+const countAttacks = (board: CellModel[][], i: number, j: number) =>
+  COMPUTER_FORWARD.filter(
+    ([dx, dy]) => isSideAt(board, i + dx, j + dy, 'player') && isEmptyAt(board, i + 2 * dx, j + 2 * dy),
+  ).length;
 
 const calculateHeuristics = (board: CellModel[][]) => {
   const size = board.length;
@@ -9,65 +49,24 @@ const calculateHeuristics = (board: CellModel[][]) => {
 
   for (let i = 0; i < size; i++) {
     for (let j = 0; j < size; j++) {
-      if (board[i][j].figure === Figure.ComputerKing || board[i][j].figure === Figure.ComputerMan) {
+      const { figure } = board[i][j];
+      const side = sideOf(figure);
+
+      if (side === 'computer') {
         computerCount++;
+        weight += figure === Figure.ComputerMan ? MAN_WEIGHT : KING_WEIGHT;
 
-        if (board[i][j].figure === Figure.ComputerMan) {
-          weight += 5;
-        }
-        if (board[i][j].figure === Figure.ComputerKing) {
-          weight += 10;
-        }
-        if (i === 0 || j === 0 || i === size - 1 || j === size - 1) {
-          weight += 7;
-        }
-        if (i + 1 >= size || j - 1 < 0 || i - 1 < 0 || j + 1 >= size) {
-          continue;
-        }
-        if (
-          (board[i + 1][j - 1].figure === Figure.PlayerMan || board[i + 1][j - 1].figure === Figure.PlayerKing) &&
-          !board[i - 1][j + 1].figure
-        ) {
-          weight -= 3;
-        }
-        if (
-          (board[i + 1][j + 1].figure === Figure.PlayerMan || board[i + 1][j + 1].figure === Figure.PlayerKing) &&
-          !board[i - 1][j - 1].figure
-        ) {
-          weight -= 3;
-        }
-        if (board[i - 1][j - 1].figure === Figure.PlayerKing && !board[i + 1][j + 1].figure) {
-          weight -= 3;
-        }
+        if (i === 0 || j === 0 || i === size - 1 || j === size - 1) weight += EDGE_BONUS;
 
-        if (board[i - 1][j + 1].figure === Figure.PlayerKing && !board[i + 1][j - 1].figure) {
-          weight -= 3;
-        }
-        if (i + 2 >= size || i - 2 < 0) {
-          continue;
-        }
-        if (
-          (board[i + 1][j - 1].figure === Figure.PlayerKing || board[i + 1][j - 1].figure === Figure.PlayerMan) &&
-          !board[i + 2][j - 2]?.figure
-        ) {
-          weight += 6;
-        }
-        if (i + 2 >= size || j + 2 >= size) {
-          continue;
-        }
-        if (
-          (board[i + 1][j + 1].figure === Figure.PlayerKing || board[i + 1][j + 1].figure === Figure.PlayerMan) &&
-          !board[i + 2][j + 2].figure
-        ) {
-          weight += 6;
-        }
-      } else if (board[i][j].figure === Figure.PlayerMan || board[i][j].figure === Figure.PlayerKing) {
+        weight -= countThreats(board, i, j) * THREAT_PENALTY;
+        weight += countAttacks(board, i, j) * ATTACK_BONUS;
+      } else if (side === 'player') {
         playerCount++;
       }
     }
   }
 
-  return weight + (computerCount - playerCount) * 1000;
+  return weight + (computerCount - playerCount) * MATERIAL_WEIGHT;
 };
 
 export default calculateHeuristics;

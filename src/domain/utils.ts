@@ -41,7 +41,7 @@ const MAN_DIRECTIONS: Record<Side, Direction[]> = {
 
 const KING_DIRECTIONS: Direction[] = [...MAN_DIRECTIONS.player, ...MAN_DIRECTIONS.computer];
 
-const sideOf = (figure: Figure | ''): Side | null => {
+export const sideOf = (figure: Figure | ''): Side | null => {
   if (figure === Figure.PlayerMan || figure === Figure.PlayerKing) return 'player';
   if (figure === Figure.ComputerMan || figure === Figure.ComputerKing) return 'computer';
 
@@ -50,7 +50,7 @@ const sideOf = (figure: Figure | ''): Side | null => {
 
 export const isKing = (figure: Figure | '') => figure === Figure.PlayerKing || figure === Figure.ComputerKing;
 
-const inBounds = (board: CellModel[][], x: number, y: number) =>
+export const inBounds = (board: CellModel[][], x: number, y: number) =>
   x >= 0 && x < board.length && y >= 0 && y < board.length;
 
 const findPieceMoves = (board: CellModel[][], x: number, y: number) => {
