@@ -2,7 +2,7 @@ import { Label, Figure } from '../helpers/constants';
 import CellModel from '../entities/CellModel';
 
 export const fillBoard = (size = 8): CellModel[][] => {
-  const board = Array.from({ length: size }, () => []);
+  const board = Array.from({ length: size }, () => [] as CellModel[]);
 
   for (let i = 0; i < size; i++) {
     for (let j = 0; j < size; j++) {
