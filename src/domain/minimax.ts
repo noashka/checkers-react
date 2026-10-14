@@ -1,5 +1,5 @@
 import calculateHeuristics from './heuristics';
-import Node from '../entities/Node';
+import Node from './Node';
 import CellModel from '../entities/CellModel';
 
 const minimax = (

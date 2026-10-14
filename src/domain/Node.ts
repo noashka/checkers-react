@@ -1,5 +1,5 @@
-import { applyMove, findAvailableMoves, findPlayerAvailableMoves, Move } from '../domain/utils';
-import CellModel from './CellModel';
+import { applyMove, findAvailableMoves, findPlayerAvailableMoves, Move } from './utils';
+import CellModel from '../entities/CellModel';
 
 export default class Node {
   board: CellModel[][];

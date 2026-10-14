@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import Board from './Board';
 import { findPlayerAvailableMoves, applyMove, shouldPlayerJump, shouldJump } from './domain/utils';
 import minimax from './domain/minimax';
-import Node from './entities/Node';
+import Node from './domain/Node';
 import CellModel from './entities/CellModel';
 import { PositionCellType } from './types';
 import delay from './helpers/delay';
