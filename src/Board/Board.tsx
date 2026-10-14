@@ -4,18 +4,19 @@ import Square from '../Square';
 import './Board.styles.css';
 import CellModel from '../entities/CellModel';
 import useDragGhost from '../hooks/useDragGhost';
+import { BOARD_SIZE } from '../helpers/constants';
 import { InitialStateType, PositionCellType } from '../types';
 
-const BOARD_CELL_COUNT = 8;
-const BOARD_LABELS = Array.from(Array(BOARD_CELL_COUNT).keys());
+const BOARD_LABELS = Array.from(Array(BOARD_SIZE).keys());
 
 type Props = {
   board: CellModel[][];
+  chainFrom: PositionCellType | null;
   handlePlayerTurn: (cell: CellModel, targetPosition: PositionCellType | DOMStringMap) => void;
   updateTargetPosition: (payload: Partial<InitialStateType>) => void;
 };
 
-const Board = ({ board, handlePlayerTurn, updateTargetPosition }: Props) => {
+const Board = ({ board, chainFrom, handlePlayerTurn, updateTargetPosition }: Props) => {
   // Handle Safari and Firefox [clientX clientY] positions
   const clientCoordinates = useRef<number[]>([0, 0]);
   const { createDragGhost, resetDragGhost } = useDragGhost();
@@ -23,10 +24,9 @@ const Board = ({ board, handlePlayerTurn, updateTargetPosition }: Props) => {
 
   const dragStart = (cell: CellModel) => (e: React.DragEvent<HTMLDivElement>) => {
     createDragGhost(e);
-    const availableMoves = findPlayerAvailableMoves(board);
+    const availableMoves = findPlayerAvailableMoves(board, chainFrom);
     const moves = availableMoves.filter((item: number[]) => item[0] === cell.x && item[1] === cell.y);
-    // handle required moves
-    setPossibleMoves(availableMoves.length > 2 ? moves : availableMoves);
+    setPossibleMoves(moves);
   };
 
   const dragEnd = (cell: CellModel) => (_e: React.DragEvent<HTMLDivElement>) => {
@@ -39,7 +39,7 @@ const Board = ({ board, handlePlayerTurn, updateTargetPosition }: Props) => {
     setPossibleMoves([]);
     if (elemBelow.dataset.x) {
       updateTargetPosition({
-        targetPosition: elemBelow.dataset.x,
+        targetPosition: { x: Number(elemBelow.dataset.x), y: Number(elemBelow.dataset.y) },
         currentCell: cell,
       });
 

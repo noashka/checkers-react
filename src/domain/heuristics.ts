@@ -1,72 +1,61 @@
-import { Figure } from '../helpers/constants';
 import CellModel from '../entities/CellModel';
+import { CAPTURE_DIRECTIONS, findJumpsFrom, inBounds, isKing, sideOf, Side } from './utils';
+
+const MAN_MATERIAL = 1000;
+const KING_MATERIAL = 1600;
+const EDGE_BONUS = 7;
+const THREAT_PENALTY = 3;
+const ATTACK_BONUS = 6;
+
+const opponentOf = (side: Side): Side => (side === 'computer' ? 'player' : 'computer');
+
+const isEmptyAt = (board: CellModel[][], x: number, y: number) => inBounds(board, x, y) && !board[x][y].figure;
+
+/** How many opposing pieces could capture the piece on (i, j) */
+const countThreats = (board: CellModel[][], i: number, j: number, side: Side) =>
+  CAPTURE_DIRECTIONS.filter(([dx, dy]) => {
+    // the attacker needs a free square right behind us to land on
+    if (!isEmptyAt(board, i - dx, j - dy)) return false;
+
+    // the nearest piece on the diagonal is the only one that can attack from that side
+    for (let distance = 1; inBounds(board, i + distance * dx, j + distance * dy); distance++) {
+      const { figure } = board[i + distance * dx][j + distance * dy];
+      if (!figure) continue;
+
+      // men attack from next to us, kings from any distance
+      return sideOf(figure) === opponentOf(side) && (distance === 1 || isKing(figure));
+    }
+
+    return false;
+  }).length;
+
+/** How many opposing pieces the piece on (i, j) could capture */
+const countAttacks = (board: CellModel[][], i: number, j: number) =>
+  new Set(findJumpsFrom(board, i, j).map(([, , x, y]) => `${Math.sign(x - i)},${Math.sign(y - j)}`)).size;
+
+const evaluatePiece = (board: CellModel[][], i: number, j: number, side: Side) => {
+  const last = board.length - 1;
+  let value = isKing(board[i][j].figure) ? KING_MATERIAL : MAN_MATERIAL;
+
+  if (i === 0 || j === 0 || i === last || j === last) value += EDGE_BONUS;
+
+  return value - countThreats(board, i, j, side) * THREAT_PENALTY + countAttacks(board, i, j) * ATTACK_BONUS;
+};
 
 const calculateHeuristics = (board: CellModel[][]) => {
-  let weight = 0;
-  let playerPieces = 0;
-  let computerPieces = 0;
+  let score = 0;
 
-  for (let i = 0; i < 8; i++) {
-    for (let j = 0; j < 8; j++) {
-      if (board[i][j].figure === Figure.Computer || board[i][j].figure === Figure.computer) {
-        playerPieces++;
+  for (let i = 0; i < board.length; i++) {
+    for (let j = 0; j < board.length; j++) {
+      const side = sideOf(board[i][j].figure);
+      if (!side) continue;
 
-        if (board[i][j].figure === Figure.computer) {
-          weight += 5;
-        }
-        if (board[i][j].figure === Figure.Computer) {
-          weight += 10;
-        }
-        if (i === 0 || j === 0 || i === 7 || j === 7) {
-          weight += 7;
-        }
-        if (i + 1 > 7 || j - 1 < 0 || i - 1 < 0 || j + 1 > 7) {
-          continue;
-        }
-        if (
-          (board[i + 1][j - 1].figure === Figure.player || board[i + 1][j - 1].figure === Figure.Player) &&
-          !board[i - 1][j + 1].figure
-        ) {
-          weight -= 3;
-        }
-        if (
-          (board[i + 1][j + 1].figure === Figure.player || board[i + 1][j + 1].figure === Figure.Player) &&
-          !board[i - 1][j - 1].figure
-        ) {
-          weight -= 3;
-        }
-        if (board[i - 1][j - 1].figure === Figure.Player && !board[i + 1][j + 1].figure) {
-          weight -= 3;
-        }
-
-        if (board[i - 1][j + 1].figure === Figure.Player && !board[i + 1][j - 1].figure) {
-          weight -= 3;
-        }
-        if (i + 2 > 7 || i - 2 < 0) {
-          continue;
-        }
-        if (
-          (board[i + 1][j - 1].figure === Figure.Player || board[i + 1][j - 1].figure === Figure.player) &&
-          !board[i + 2][j - 2]?.figure
-        ) {
-          weight += 6;
-        }
-        if (i + 2 > 7 || j + 2 > 7) {
-          continue;
-        }
-        if (
-          (board[i + 1][j + 1].figure === Figure.Player || board[i + 1][j + 1].figure === Figure.player) &&
-          !board[i + 2][j + 2].figure
-        ) {
-          weight += 6;
-        }
-      } else if (board[i][j].figure === Figure.player || board[i][j].figure === Figure.Player) {
-        computerPieces++;
-      }
+      const sign = side === 'computer' ? 1 : -1;
+      score += sign * evaluatePiece(board, i, j, side);
     }
   }
 
-  return weight + (playerPieces - computerPieces) * 1000;
+  return score;
 };
 
 export default calculateHeuristics;

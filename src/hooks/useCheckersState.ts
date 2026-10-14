@@ -1,6 +1,7 @@
 import { useReducer, useCallback } from 'react';
 import { InitialStateType } from '../types';
 import { fillBoard, findPlayerAvailableMoves } from '../domain/utils';
+import { createDrawState } from '../domain/game';
 
 const initialBoard = fillBoard();
 const initialState: InitialStateType = {
@@ -11,6 +12,8 @@ const initialState: InitialStateType = {
   availableMoves: findPlayerAvailableMoves(initialBoard),
   targetPosition: null,
   currentCell: null,
+  chainFrom: null,
+  draw: createDrawState(initialBoard, 'player'),
 };
 
 type ActionType<T> = {
@@ -21,6 +24,7 @@ type ActionType<T> = {
 const UPDATE_COMPUTER_TURN = 'UPDATE_COMPUTER_TURN';
 const UPDATE_PLAYER_TURN = 'UPDATE_PLAYER_TURN';
 const UPDATE_TARGET_POSITION = 'UPDATE_TARGET_POSITION';
+const UPDATE_PLAYER_CHAIN = 'UPDATE_PLAYER_CHAIN';
 const RESET_STATE = 'RESET_STATE';
 
 const checkersReducer = (state: InitialStateType, action: ActionType<Partial<InitialStateType>>) => {
@@ -31,15 +35,27 @@ const checkersReducer = (state: InitialStateType, action: ActionType<Partial<Ini
         playerTurn: true,
         board: action.payload.board,
         playerPieces: action.payload.playerPieces,
+        draw: action.payload.draw,
       };
     case UPDATE_PLAYER_TURN:
       return {
         ...state,
         currentCell: null,
         targetPosition: null,
+        chainFrom: null,
         playerTurn: false,
         computerPieces: action.payload.computerPieces,
         availableMoves: action.payload.availableMoves,
+        board: action.payload.board,
+        draw: action.payload.draw,
+      };
+    case UPDATE_PLAYER_CHAIN:
+      return {
+        ...state,
+        currentCell: null,
+        targetPosition: null,
+        chainFrom: action.payload.chainFrom,
+        computerPieces: action.payload.computerPieces,
         board: action.payload.board,
       };
     case UPDATE_TARGET_POSITION:
@@ -51,7 +67,7 @@ const checkersReducer = (state: InitialStateType, action: ActionType<Partial<Ini
     case RESET_STATE:
       return initialState;
     default:
-      state;
+      return state;
   }
 };
 
@@ -72,6 +88,13 @@ const useCheckersState = () => {
     });
   }, []);
 
+  const updatePlayerChain = useCallback((payload: Partial<InitialStateType>) => {
+    dispatch({
+      type: UPDATE_PLAYER_CHAIN,
+      payload,
+    });
+  }, []);
+
   const resetState = useCallback(() => {
     dispatch({ type: RESET_STATE });
   }, []);
@@ -83,7 +106,7 @@ const useCheckersState = () => {
     });
   }, []);
 
-  return { state, updateComputerTurn, updatePlayerTurn, resetState, updateTargetPosition };
+  return { state, updateComputerTurn, updatePlayerTurn, updatePlayerChain, resetState, updateTargetPosition };
 };
 
 export default useCheckersState;

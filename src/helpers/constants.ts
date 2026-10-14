@@ -4,8 +4,10 @@ export enum Label {
 }
 
 export enum Figure {
-  Computer = 'Computer',
-  computer = 'computer',
-  Player = 'Player',
-  player = 'player',
+  ComputerKing = 'computer-king',
+  ComputerMan = 'computer-man',
+  PlayerKing = 'player-king',
+  PlayerMan = 'player-man',
 }
+
+export const BOARD_SIZE = 8;
