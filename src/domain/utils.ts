@@ -118,7 +118,22 @@ export type MoveResult = {
 
 const promotionRow = (board: CellModel[][], side: Side) => (side === 'player' ? 0 : board.length - 1);
 
-export const applyMove = (board: CellModel[][], [fromX, fromY, toX, toY]: Move): MoveResult => {
+const isLegalMove = (board: CellModel[][], move: Move) => {
+  const [fromX, fromY, toX, toY] = move;
+  if (!inBounds(board, fromX, fromY) || !inBounds(board, toX, toY)) return false;
+
+  const { steps, jumps } = findPieceMoves(board, fromX, fromY);
+
+  return [...steps, ...jumps].some(([, , x, y]) => x === toX && y === toY);
+};
+
+/** Applies a move to a copy of the board. Throws if the piece cannot legally make that move. */
+export const applyMove = (board: CellModel[][], move: Move): MoveResult => {
+  if (!isLegalMove(board, move)) {
+    throw new Error(`Illegal move: [${move.join(', ')}]`);
+  }
+
+  const [fromX, fromY, toX, toY] = move;
   // Rows are copied, cells are replaced rather than mutated, so untouched cells are shared between boards
   const newBoard = board.map((row) => row.slice());
   const setFigure = (x: number, y: number, figure: Figure | '') => {

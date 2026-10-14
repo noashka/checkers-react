@@ -6,6 +6,7 @@ import {
   findPlayerAvailableMoves,
   findAvailableMoves,
   applyMove,
+  Move,
   shouldJump,
   shouldPlayerJump,
 } from './utils';
@@ -120,14 +121,15 @@ describe('test domain utils', () => {
 
   describe('applyMove', () => {
     it('should promote a man that reaches the far row', () => {
-      const board = boardFrom(['. . . .', 'p . . .', '. . . .', '. . . c']);
+      const board = boardFrom(['. . . .', 'p . . .', '. . . c', '. . . .']);
 
       const player = applyMove(board, [1, 0, 0, 1]);
       expect(player.promoted).toBe(true);
       expect(player.board[0][1].figure).toBe(Figure.PlayerKing);
 
-      const computer = applyMove(board, [3, 3, 2, 2]);
-      expect(computer.promoted).toBe(false);
+      const computer = applyMove(board, [2, 3, 3, 2]);
+      expect(computer.promoted).toBe(true);
+      expect(computer.board[3][2].figure).toBe(Figure.ComputerKing);
     });
 
     it('should not report a king move as promotion', () => {
@@ -143,6 +145,27 @@ describe('test domain utils', () => {
 
       expect(applyMove(board, [2, 0, 0, 2]).captured).toBe(true);
       expect(applyMove(boardFrom(['. . . .', '. . . .', 'p . . .', '. . . .']), [2, 0, 1, 1]).captured).toBe(false);
+    });
+
+    describe('validation', () => {
+      const board = boardFrom(['. . . .', '. c . .', '. . p .', 'p . . .']);
+
+      it.each([
+        ['an empty source square', [0, 0, 1, 1]],
+        ['an occupied target', [2, 2, 1, 1]],
+        ['a backward move by a man', [2, 2, 3, 1]],
+        ['a move longer than a step', [3, 0, 1, 2]],
+        ['a non-diagonal move', [3, 0, 2, 0]],
+        ['a target outside the board', [3, 0, 4, 1]],
+        ['a source outside the board', [-1, 0, 0, 1]],
+      ] as [string, Move][])('should reject %s', (_name, move) => {
+        expect(() => applyMove(board, move)).toThrow('Illegal move');
+      });
+
+      it('should reject a jump over an empty square or an own piece', () => {
+        expect(() => applyMove(boardFrom(['. . . .', '. . . .', '. . p .', '. . . .']), [2, 2, 0, 0])).toThrow();
+        expect(() => applyMove(boardFrom(['. . . .', '. p . .', '. . p .', '. . . .']), [2, 2, 0, 0])).toThrow();
+      });
     });
   });
 });
