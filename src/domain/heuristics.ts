@@ -2,9 +2,9 @@ import { Figure } from '../helpers/constants';
 import CellModel from '../entities/CellModel';
 import { directionsOf, inBounds, sideOf, Side } from './utils';
 
-const MATERIAL_WEIGHT = 1000;
-const MAN_WEIGHT = 5;
-const KING_WEIGHT = 10;
+// material dominates positional terms; a king is worth clearly more than a man, but less than two men
+const MAN_MATERIAL = 1000;
+const KING_MATERIAL = 1600;
 const EDGE_BONUS = 7;
 const THREAT_PENALTY = 3;
 const ATTACK_BONUS = 6;
@@ -39,7 +39,7 @@ const countAttacks = (board: CellModel[][], i: number, j: number, side: Side) =>
 const evaluatePiece = (board: CellModel[][], i: number, j: number, side: Side) => {
   const last = board.length - 1;
   const isKing = board[i][j].figure === Figure.ComputerKing || board[i][j].figure === Figure.PlayerKing;
-  let value = isKing ? KING_WEIGHT : MAN_WEIGHT;
+  let value = isKing ? KING_MATERIAL : MAN_MATERIAL;
 
   if (i === 0 || j === 0 || i === last || j === last) value += EDGE_BONUS;
 
@@ -56,7 +56,7 @@ const calculateHeuristics = (board: CellModel[][]) => {
       if (!side) continue;
 
       const sign = side === 'computer' ? 1 : -1;
-      score += sign * (MATERIAL_WEIGHT + evaluatePiece(board, i, j, side));
+      score += sign * evaluatePiece(board, i, j, side);
     }
   }
 

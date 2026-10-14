@@ -31,8 +31,8 @@ describe('calculateHeuristics', () => {
     const king = boardFrom(rows);
     const man = boardFrom(rows.map((row) => row.replace('C', 'c')));
 
-    // king 10 + attack 6 against the man 5 - threat 3
-    expect(calculateHeuristics(king)).toBe(14);
+    // king 1600 + attack 6 against the man 1000 - threat 3
+    expect(calculateHeuristics(king)).toBe(609);
     // man 5 cannot capture backwards, so neither side attacks
     expect(calculateHeuristics(man)).toBe(0);
   });
@@ -61,5 +61,17 @@ describe('calculateHeuristics', () => {
 
     expect(calculateHeuristics(computerOnly)).toBeGreaterThan(calculateHeuristics(even));
     expect(calculateHeuristics(even)).toBeGreaterThan(calculateHeuristics(playerOnly));
+  });
+
+  it('should value a king more than a man but less than two men', () => {
+    const score = (piece: string) =>
+      calculateHeuristics(boardFrom([EMPTY_ROW, EMPTY_ROW, `. . ${piece} . . .`, EMPTY_ROW, EMPTY_ROW, EMPTY_ROW]));
+    const twoMen = calculateHeuristics(
+      boardFrom([EMPTY_ROW, EMPTY_ROW, '. . c . c .', EMPTY_ROW, EMPTY_ROW, EMPTY_ROW]),
+    );
+
+    expect(score('C')).toBeGreaterThan(score('c') + 500);
+    expect(score('C')).toBeLessThan(twoMen);
+    expect(score('P')).toBe(-score('C'));
   });
 });
