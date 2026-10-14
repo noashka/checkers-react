@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import Board from './Board';
-import { findPlayerAvailableMoves, findJumpsFrom, applyMove, shouldJump } from './domain/utils';
+import { findPlayerAvailableMoves, findContinuation, applyMove, shouldJump, Move } from './domain/utils';
 import minimax from './domain/minimax';
 import Node from './domain/Node';
 import CellModel from './entities/CellModel';
@@ -62,11 +62,12 @@ const App = () => {
       const newMove = [currentX, currentY, targetX, targetY].toString();
 
       if (availableMoves.some((move) => move.toString() === newMove)) {
-        const result = applyMove(state.board, [currentX, currentY, targetX, targetY]);
+        const move: Move = [currentX, currentY, targetX, targetY];
+        const result = applyMove(state.board, move);
         const computerPieces = result.captured ? state.computerPieces - 1 : state.computerPieces;
 
-        // a capture must be continued with the same piece while it can still jump
-        if (result.captured && findJumpsFrom(result.board, targetX, targetY).length > 0) {
+        // a capture must be continued with the same piece while it can still jump, unless it was just promoted
+        if (findContinuation(result, move).length > 0) {
           updatePlayerChain({ computerPieces, board: result.board, chainFrom: { x: targetX, y: targetY } });
           return;
         }

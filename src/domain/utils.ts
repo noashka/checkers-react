@@ -167,3 +167,7 @@ export const applyMove = (board: CellModel[][], move: Move): MoveResult => {
 
   return { board: newBoard, captured, promoted };
 };
+
+/** Further jumps the moving piece must make after `move`. Promotion ends the turn even if more jumps exist. */
+export const findContinuation = (result: MoveResult, [, , toX, toY]: Move): Move[] =>
+  result.captured && !result.promoted ? findJumpsFrom(result.board, toX, toY) : [];

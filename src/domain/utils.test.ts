@@ -7,6 +7,7 @@ import {
   findAvailableMoves,
   applyMove,
   findJumpsFrom,
+  findContinuation,
   Move,
   shouldJump,
   shouldPlayerJump,
@@ -139,6 +140,47 @@ describe('test domain utils', () => {
 
       expect(findPlayerAvailableMoves(open)).toHaveLength(2);
       expect(findPlayerAvailableMoves(open, { x: 2, y: 1 })).toEqual([]);
+    });
+  });
+
+  describe('capture continuation', () => {
+    it('should end the turn when a man is promoted by a capture', () => {
+      const board = boardFrom([
+        '. . . . . .',
+        '. c . c . .',
+        'p . . . . .',
+        '. . . . . .',
+        '. . . . . .',
+        '. . . . . .',
+      ]);
+      const move: Move = [2, 0, 0, 2];
+      const result = applyMove(board, move);
+
+      expect(result.promoted).toBe(true);
+      // as a king the piece could jump again, but promotion ends the turn
+      expect(findJumpsFrom(result.board, 0, 2)).toEqual([[0, 2, 2, 4]]);
+      expect(findContinuation(result, move)).toEqual([]);
+    });
+
+    it('should continue the turn when an unpromoted piece can jump again', () => {
+      const board = boardFrom([
+        '. . . . . .',
+        '. . . . . .',
+        '. c . . . .',
+        '. . . . . .',
+        '. . . c . .',
+        '. . . . p .',
+      ]);
+      const move: Move = [5, 4, 3, 2];
+
+      expect(findContinuation(applyMove(board, move), move)).toEqual([[3, 2, 1, 0]]);
+    });
+
+    it('should not continue after a plain step', () => {
+      const move: Move = [2, 1, 1, 0];
+      const result = applyMove(boardFrom(['. . . .', '. . . .', '. p . .', '. . . .']), move);
+
+      expect(findContinuation(result, move)).toEqual([]);
     });
   });
 
