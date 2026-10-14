@@ -50,6 +50,14 @@ export const sideOf = (figure: Figure | ''): Side | null => {
 
 export const isKing = (figure: Figure | '') => figure === Figure.PlayerKing || figure === Figure.ComputerKing;
 
+/** Directions a piece on the board may move or capture in */
+export const directionsOf = (figure: Figure | ''): readonly Direction[] => {
+  const side = sideOf(figure);
+  if (!side) return [];
+
+  return isKing(figure) ? KING_DIRECTIONS : MAN_DIRECTIONS[side];
+};
+
 export const inBounds = (board: CellModel[][], x: number, y: number) =>
   x >= 0 && x < board.length && y >= 0 && y < board.length;
 
@@ -61,7 +69,7 @@ const findPieceMoves = (board: CellModel[][], x: number, y: number) => {
 
   if (!side) return { steps, jumps };
 
-  for (const [dx, dy] of isKing(figure) ? KING_DIRECTIONS : MAN_DIRECTIONS[side]) {
+  for (const [dx, dy] of directionsOf(figure)) {
     const nextX = x + dx;
     const nextY = y + dy;
     if (!inBounds(board, nextX, nextY)) continue;

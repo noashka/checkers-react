@@ -24,4 +24,15 @@ describe('calculateHeuristics', () => {
     // man 5 - threat 3, no attack: the landing square (4, -1) does not exist
     expect(calculateHeuristics(board)).toBe(2);
   });
+
+  it('should let a king attack backwards but not a man', () => {
+    const rows = [EMPTY_ROW, '. . . p . .', '. . C . . .', EMPTY_ROW, EMPTY_ROW, EMPTY_ROW];
+    const king = boardFrom(rows);
+    const man = boardFrom(rows.map((row) => row.replace('C', 'c')));
+
+    // king 10 + attack 6, the man behind it cannot capture a king
+    expect(calculateHeuristics(king)).toBe(16);
+    // man 5, it cannot capture backwards
+    expect(calculateHeuristics(man)).toBe(5);
+  });
 });

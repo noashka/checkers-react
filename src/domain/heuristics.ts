@@ -1,6 +1,6 @@
 import { Figure } from '../helpers/constants';
 import CellModel from '../entities/CellModel';
-import { inBounds, sideOf, Side } from './utils';
+import { directionsOf, inBounds, sideOf, Side } from './utils';
 
 const MATERIAL_WEIGHT = 1000;
 const MAN_WEIGHT = 5;
@@ -8,11 +8,6 @@ const KING_WEIGHT = 10;
 const EDGE_BONUS = 7;
 const THREAT_PENALTY = 3;
 const ATTACK_BONUS = 6;
-
-const COMPUTER_FORWARD = [
-  [1, -1],
-  [1, 1],
-];
 
 const isSideAt = (board: CellModel[][], x: number, y: number, side: Side) =>
   inBounds(board, x, y) && sideOf(board[x][y].figure) === side;
@@ -37,7 +32,7 @@ const countThreats = (board: CellModel[][], i: number, j: number) => {
 
 /** How many opposing pieces the computer piece on (i, j) could capture */
 const countAttacks = (board: CellModel[][], i: number, j: number) =>
-  COMPUTER_FORWARD.filter(
+  directionsOf(board[i][j].figure).filter(
     ([dx, dy]) => isSideAt(board, i + dx, j + dy, 'player') && isEmptyAt(board, i + 2 * dx, j + 2 * dy),
   ).length;
 
