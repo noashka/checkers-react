@@ -25,7 +25,7 @@ describe('getGameStatus', () => {
   });
 
   it('should be lost by a side that is blocked', () => {
-    const blocked = boardFrom(['p . . .', '. c . .', '. . . .', '. . . .']);
+    const blocked = boardFrom(['p . . .', '. c . .', '. . c .', '. . . .']);
 
     expect(getGameStatus(blocked, 'player')).toBe('computerWins');
   });

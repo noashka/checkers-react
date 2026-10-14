@@ -1,7 +1,6 @@
 import CellModel from '../entities/CellModel';
 import { applyMove, findContinuation, findMoves, Move, Side } from './utils';
 
-/** A complete turn: one step, or a whole capture sequence made by a single piece */
 export type Turn = {
   moves: Move[];
   board: CellModel[][];

@@ -4,7 +4,6 @@ import { findMoves, isKing, Move, Side } from './utils';
 
 export type GameStatus = 'playing' | 'playerWins' | 'computerWins' | 'draw';
 
-/** Plies (single player or computer turns) without a capture or a man move after which the game is drawn */
 export const NO_PROGRESS_LIMIT = 80;
 export const REPETITIONS_FOR_DRAW = 3;
 
@@ -29,22 +28,19 @@ export const createDrawState = (board: CellModel[][], sideToMove: Side): DrawSta
   positions: { [positionKey(board, sideToMove)]: 1 },
 });
 
-/** Captures and man moves are irreversible, so they reset the no-progress counter */
 export const isProgress = (boardBefore: CellModel[][], [fromX, fromY]: Move, captured: boolean) =>
   captured || !isKing(boardBefore[fromX][fromY].figure);
 
-/** Records the position reached after a finished turn */
 export const advanceDrawState = (
   draw: DrawState,
   board: CellModel[][],
   sideToMove: Side,
   progress: boolean,
-): DrawState => {
+) => {
   const key = positionKey(board, sideToMove);
 
   return {
     sinceProgress: progress ? 0 : draw.sinceProgress + 1,
-    // after progress an earlier position can never come back
     positions: { ...(progress ? {} : draw.positions), [key]: (progress ? 0 : (draw.positions[key] ?? 0)) + 1 },
   };
 };

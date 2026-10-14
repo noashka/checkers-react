@@ -26,14 +26,13 @@ describe('calculateHeuristics', () => {
     expect(calculateHeuristics(board)).toBe(-16);
   });
 
-  it('should let a king attack backwards but not a man', () => {
+  it('should count backward captures for men as well as kings', () => {
     const rows = [EMPTY_ROW, '. . . p . .', '. . C . . .', EMPTY_ROW, EMPTY_ROW, EMPTY_ROW];
     const king = boardFrom(rows);
     const man = boardFrom(rows.map((row) => row.replace('C', 'c')));
 
-    // king 1600 + attack 6 against the man 1000 - threat 3
-    expect(calculateHeuristics(king)).toBe(609);
-    // man 5 cannot capture backwards, so neither side attacks
+    // both pieces can capture each other: attack 6 - threat 3 on each side, the king adds 600 material
+    expect(calculateHeuristics(king)).toBe(600);
     expect(calculateHeuristics(man)).toBe(0);
   });
 

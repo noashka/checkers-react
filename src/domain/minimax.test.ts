@@ -1,5 +1,6 @@
 import minimax, { SearchTimeout, WIN_SCORE, TranspositionTable } from './minimax';
 import Node from './Node';
+import { positionKey } from './game';
 import { findTurns } from './turns';
 import { boardFrom } from './testBoard';
 import { fillBoard, findMoves } from './utils';
@@ -85,6 +86,16 @@ describe('minimax', () => {
         expect(minimax(board, 3, -Infinity, Infinity, maximizing, { table })).toBe(expected);
         expect(table.size).toBeGreaterThan(0);
       }
+    });
+
+    it('should cut off on cached bounds that already decide the window', () => {
+      const board = fillBoard();
+      const key = positionKey(board, 'computer');
+      const lower: TranspositionTable = new Map([[key, { depth: 3, value: 500, bound: 'lower' }]]);
+      const upper: TranspositionTable = new Map([[key, { depth: 3, value: 50, bound: 'upper' }]]);
+
+      expect(minimax(board, 3, -Infinity, 100, true, { table: lower })).toBe(500);
+      expect(minimax(board, 3, 100, Infinity, true, { table: upper })).toBe(50);
     });
 
     it('should abandon the search once the deadline has passed', () => {

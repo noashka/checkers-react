@@ -39,7 +39,7 @@ const MAN_DIRECTIONS: Record<Side, Direction[]> = {
   ],
 };
 
-const KING_DIRECTIONS: Direction[] = [...MAN_DIRECTIONS.player, ...MAN_DIRECTIONS.computer];
+export const CAPTURE_DIRECTIONS: Direction[] = [...MAN_DIRECTIONS.player, ...MAN_DIRECTIONS.computer];
 
 export const sideOf = (figure: Figure | ''): Side | null => {
   if (figure === Figure.PlayerMan || figure === Figure.PlayerKing) return 'player';
@@ -50,13 +50,8 @@ export const sideOf = (figure: Figure | ''): Side | null => {
 
 export const isKing = (figure: Figure | '') => figure === Figure.PlayerKing || figure === Figure.ComputerKing;
 
-/** Directions a piece on the board may move or capture in */
-export const directionsOf = (figure: Figure | ''): readonly Direction[] => {
-  const side = sideOf(figure);
-  if (!side) return [];
-
-  return isKing(figure) ? KING_DIRECTIONS : MAN_DIRECTIONS[side];
-};
+const stepDirectionsOf = (figure: Figure, side: Side): readonly Direction[] =>
+  isKing(figure) ? CAPTURE_DIRECTIONS : MAN_DIRECTIONS[side];
 
 export const inBounds = (board: CellModel[][], x: number, y: number) =>
   x >= 0 && x < board.length && y >= 0 && y < board.length;
@@ -69,14 +64,16 @@ const findPieceMoves = (board: CellModel[][], x: number, y: number) => {
 
   if (!side) return { steps, jumps };
 
-  for (const [dx, dy] of directionsOf(figure)) {
+  const stepDirections = stepDirectionsOf(figure as Figure, side);
+
+  for (const [dx, dy] of CAPTURE_DIRECTIONS) {
     const nextX = x + dx;
     const nextY = y + dy;
     if (!inBounds(board, nextX, nextY)) continue;
 
     const nextSide = sideOf(board[nextX][nextY].figure);
     if (!nextSide) {
-      steps.push([x, y, nextX, nextY]);
+      if (stepDirections.some(([sx, sy]) => sx === dx && sy === dy)) steps.push([x, y, nextX, nextY]);
       continue;
     }
 
@@ -108,14 +105,11 @@ export const findMoves = (board: CellModel[][], side: Side, chainFrom?: Position
     }
   }
 
-  // a capture is mandatory
   return jumps.length === 0 && !chainFrom ? steps : jumps;
 };
 
-/** Jumps the piece on (x, y) can make, i.e. how a capture sequence may continue from there */
 export const findJumpsFrom = (board: CellModel[][], x: number, y: number): Move[] => findPieceMoves(board, x, y).jumps;
 
-/** Pass chainFrom while the player is in the middle of a capture sequence */
 export const findPlayerAvailableMoves = (board: CellModel[][], chainFrom?: Position | null) =>
   findMoves(board, 'player', chainFrom);
 
@@ -138,7 +132,6 @@ const isLegalMove = (board: CellModel[][], move: Move) => {
   return [...steps, ...jumps].some(([, , x, y]) => x === toX && y === toY);
 };
 
-/** Applies a move to a copy of the board. Throws if the piece cannot legally make that move. */
 export const applyMove = (board: CellModel[][], move: Move): MoveResult => {
   if (!isLegalMove(board, move)) {
     throw new Error(`Illegal move: [${move.join(', ')}]`);
@@ -170,6 +163,5 @@ export const applyMove = (board: CellModel[][], move: Move): MoveResult => {
   return { board: newBoard, captured, promoted };
 };
 
-/** Further jumps the moving piece must make after `move`. Promotion ends the turn even if more jumps exist. */
 export const findContinuation = (result: MoveResult, [, , toX, toY]: Move): Move[] =>
   result.captured && !result.promoted ? findJumpsFrom(result.board, toX, toY) : [];

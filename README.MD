@@ -9,8 +9,8 @@ English/American draughts on an 8x8 board, 12 pieces per side:
 
 - Men move one square diagonally forward onto an empty square. Kings (a man that reaches the far row) move one
   square diagonally in any direction.
-- A capture jumps over an adjacent opposing piece onto the empty square behind it. Men capture forward only, kings
-  in every direction.
+- A capture jumps over an adjacent opposing piece onto the empty square behind it, in any of the four diagonal
+  directions: men may capture backwards too, even though they cannot step backwards.
 - **A capture is mandatory.** If any piece can capture, only captures are valid moves.
 - **Capture sequences.** After a capture the same piece must keep jumping while it can. A man promoted by a capture
   ends its turn there, even if the new king could continue.

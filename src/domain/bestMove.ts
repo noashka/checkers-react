@@ -11,7 +11,6 @@ export type BestMove = {
   board: CellModel[][];
   captures: number;
   score: number;
-  /** Depth in plies of the last completely searched iteration */
   depth: number;
 };
 

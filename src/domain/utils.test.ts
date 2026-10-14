@@ -13,6 +13,8 @@ import {
 
 const board = fillBoard(8);
 
+const EMPTY = '. . . . . .';
+
 describe('test domain utils', () => {
   it('should fill board', () => {
     const size = 2;
@@ -105,6 +107,21 @@ describe('test domain utils', () => {
 
       expect(findPlayerAvailableMoves(board).every(([, , toX]) => toX === 1 || toX === 0)).toBe(true);
       expect(findJumpsFrom(board, 2, 1)).toHaveLength(0);
+    });
+
+    it('should let men capture backwards', () => {
+      const player = boardFrom([EMPTY, EMPTY, '. . p . . .', '. . . c . .', EMPTY, EMPTY]);
+      const computer = boardFrom([EMPTY, EMPTY, '. . p . . .', '. . . c . .', EMPTY, EMPTY]);
+
+      expect(findPlayerAvailableMoves(player)).toEqual([[2, 2, 4, 4]]);
+      // the computer man jumps towards row 0, which is backwards for it
+      expect(findAvailableMoves(computer)).toEqual([[3, 3, 1, 1]]);
+    });
+
+    it('should not let men step backwards when nothing can be captured', () => {
+      const board = boardFrom([EMPTY, EMPTY, '. . p . . .', EMPTY, EMPTY, EMPTY]);
+
+      expect(findPlayerAvailableMoves(board).every(([fromX, , toX]) => toX < fromX)).toBe(true);
     });
 
     it('should find computer captures for men and kings', () => {
