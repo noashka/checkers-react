@@ -1,4 +1,5 @@
 import { Figure } from '../helpers/constants';
+import CellModel from '../entities/CellModel';
 import { fillBoard, findPlayerAvailableMoves, findAvailableMoves, makeAmove } from './utils';
 
 const board = fillBoard(8);
@@ -31,5 +32,30 @@ describe('test domain utils', () => {
 
     expect(currentCell.figure).toBe('');
     expect(nextCell.figure).toBe(Figure.PlayerMan);
+  });
+
+  it('should not mutate the source board', () => {
+    const source = fillBoard(8);
+    const snapshot = JSON.stringify(source);
+
+    makeAmove({ board: source, currentX: 5, currentY: 0, targetX: 4, targetY: 1, king: Figure.PlayerKing });
+
+    expect(JSON.stringify(source)).toBe(snapshot);
+  });
+
+  it('should remove the captured piece on a jump', () => {
+    const source = fillBoard(8);
+    source[4][1] = new CellModel(source[4][1].label, Figure.ComputerMan, 4, 1);
+    const result = makeAmove({
+      board: source,
+      currentX: 5,
+      currentY: 0,
+      targetX: 3,
+      targetY: 2,
+      king: Figure.PlayerKing,
+    });
+
+    expect(result[4][1].figure).toBe('');
+    expect(result[3][2].figure).toBe(Figure.PlayerMan);
   });
 });

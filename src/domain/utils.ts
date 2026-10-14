@@ -37,7 +37,10 @@ const checkPlayerMoves = (
 
   if (board[targetX][targetY].figure) return false;
 
-  if (board[currentX][currentY].figure === Figure.ComputerMan || board[currentX][currentY].figure === Figure.ComputerKing)
+  if (
+    board[currentX][currentY].figure === Figure.ComputerMan ||
+    board[currentX][currentY].figure === Figure.ComputerKing
+  )
     return false;
 
   if (!board[targetX][targetY].figure) return true;
@@ -58,13 +61,17 @@ const checkPlayerJumps = (
 
   if (board[crossX][crossY].figure === '') return false;
 
-  if (board[crossX][crossY].figure === Figure.PlayerKing || board[crossX][crossY].figure === Figure.PlayerMan) return false;
+  if (board[crossX][crossY].figure === Figure.PlayerKing || board[crossX][crossY].figure === Figure.PlayerMan)
+    return false;
 
   if (board[targetX][targetY].figure) return false;
 
   if (board[currentX][currentY].figure === '') return false;
 
-  if (board[currentX][currentY].figure === Figure.ComputerMan || board[currentX][currentY].figure === Figure.ComputerKing)
+  if (
+    board[currentX][currentY].figure === Figure.ComputerMan ||
+    board[currentX][currentY].figure === Figure.ComputerKing
+  )
     return false;
 
   return true;
@@ -225,28 +232,26 @@ export const makeAmove = ({
   king: string;
   queenRow?: number;
 }): CellModel[][] => {
-  const newBoard = JSON.parse(JSON.stringify(board));
+  // Rows are copied, cells are replaced rather than mutated, so untouched cells are shared between boards
+  const newBoard = board.map((row) => row.slice());
+  const setFigure = (x: number, y: number, figure: Figure | '') => {
+    newBoard[x][y] = new CellModel(newBoard[x][y].label, figure, x, y);
+  };
 
   let { figure } = newBoard[currentX][currentY];
-  let dx = currentX - targetX;
-  let dy = currentY - targetY;
+  const dx = currentX - targetX;
+  const dy = currentY - targetY;
 
-  if (dx === -2 && dy === 2) {
-    newBoard[currentX + 1][currentY - 1].figure = '';
-  } else if (dx === 2 && dy === 2) {
-    newBoard[currentX - 1][currentY - 1].figure = '';
-  } else if (dx == 2 && dy == -2) {
-    newBoard[currentX - 1][currentY + 1].figure = '';
-  } else if (dx == -2 && dy == -2) {
-    newBoard[currentX + 1][currentY + 1].figure = '';
+  if (Math.abs(dx) === 2 && Math.abs(dy) === 2) {
+    setFigure(currentX - dx / 2, currentY - dy / 2, '');
   }
 
   if (Number(targetX) === queenRow) {
-    figure = king;
+    figure = king as Figure;
   }
 
-  newBoard[currentX][currentY].figure = '';
-  newBoard[Number(targetX)][targetY].figure = figure;
+  setFigure(currentX, currentY, '');
+  setFigure(Number(targetX), targetY, figure);
 
   return newBoard;
 };
