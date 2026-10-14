@@ -2,12 +2,13 @@ import { Figure } from '../helpers/constants';
 import CellModel from '../entities/CellModel';
 
 const calculateHeuristics = (board: CellModel[][]) => {
+  const size = board.length;
   let weight = 0;
   let computerCount = 0;
   let playerCount = 0;
 
-  for (let i = 0; i < 8; i++) {
-    for (let j = 0; j < 8; j++) {
+  for (let i = 0; i < size; i++) {
+    for (let j = 0; j < size; j++) {
       if (board[i][j].figure === Figure.ComputerKing || board[i][j].figure === Figure.ComputerMan) {
         computerCount++;
 
@@ -17,10 +18,10 @@ const calculateHeuristics = (board: CellModel[][]) => {
         if (board[i][j].figure === Figure.ComputerKing) {
           weight += 10;
         }
-        if (i === 0 || j === 0 || i === 7 || j === 7) {
+        if (i === 0 || j === 0 || i === size - 1 || j === size - 1) {
           weight += 7;
         }
-        if (i + 1 > 7 || j - 1 < 0 || i - 1 < 0 || j + 1 > 7) {
+        if (i + 1 >= size || j - 1 < 0 || i - 1 < 0 || j + 1 >= size) {
           continue;
         }
         if (
@@ -42,7 +43,7 @@ const calculateHeuristics = (board: CellModel[][]) => {
         if (board[i - 1][j + 1].figure === Figure.PlayerKing && !board[i + 1][j - 1].figure) {
           weight -= 3;
         }
-        if (i + 2 > 7 || i - 2 < 0) {
+        if (i + 2 >= size || i - 2 < 0) {
           continue;
         }
         if (
@@ -51,7 +52,7 @@ const calculateHeuristics = (board: CellModel[][]) => {
         ) {
           weight += 6;
         }
-        if (i + 2 > 7 || j + 2 > 7) {
+        if (i + 2 >= size || j + 2 >= size) {
           continue;
         }
         if (

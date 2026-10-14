@@ -9,3 +9,5 @@ export enum Figure {
   PlayerKing = 'player-king',
   PlayerMan = 'player-man',
 }
+
+export const BOARD_SIZE = 8;

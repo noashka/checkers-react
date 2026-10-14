@@ -4,10 +4,10 @@ import Square from '../Square';
 import './Board.styles.css';
 import CellModel from '../entities/CellModel';
 import useDragGhost from '../hooks/useDragGhost';
+import { BOARD_SIZE } from '../helpers/constants';
 import { InitialStateType, PositionCellType } from '../types';
 
-const BOARD_CELL_COUNT = 8;
-const BOARD_LABELS = Array.from(Array(BOARD_CELL_COUNT).keys());
+const BOARD_LABELS = Array.from(Array(BOARD_SIZE).keys());
 
 type Props = {
   board: CellModel[][];

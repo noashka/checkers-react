@@ -20,7 +20,7 @@ export default class Node {
     if (computerMoves) {
       availableMoves = findAvailableMoves(this.board);
       king = Figure.ComputerKing;
-      queenRow = 7;
+      queenRow = this.board.length - 1;
     } else {
       availableMoves = findPlayerAvailableMoves(this.board);
       king = Figure.PlayerKing;

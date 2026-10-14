@@ -11,6 +11,21 @@ describe('test domain utils', () => {
     expect(result.length).toBe(size);
   });
 
+  it('should place pieces on a board of any even size', () => {
+    const size = 6;
+    const cells = fillBoard(size).flat();
+
+    expect(cells.filter((cell) => cell.figure === Figure.ComputerMan)).toHaveLength(6);
+    expect(cells.filter((cell) => cell.figure === Figure.PlayerMan)).toHaveLength(6);
+  });
+
+  it('should find moves on a smaller board without leaving it', () => {
+    const small = fillBoard(6);
+
+    expect(findAvailableMoves(small).length).toBeGreaterThan(0);
+    expect(findPlayerAvailableMoves(small).length).toBeGreaterThan(0);
+  });
+
   it('should find player available moves', () => {
     const result = findPlayerAvailableMoves(board);
     const possiblePlayerMoves = 7;

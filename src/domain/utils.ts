@@ -1,7 +1,8 @@
-import { Label, Figure } from '../helpers/constants';
+import { Label, Figure, BOARD_SIZE } from '../helpers/constants';
 import CellModel from '../entities/CellModel';
 
-export const fillBoard = (size = 8): CellModel[][] => {
+export const fillBoard = (size = BOARD_SIZE): CellModel[][] => {
+  const pieceRows = size / 2 - 1;
   const board = Array.from({ length: size }, () => [] as CellModel[]);
 
   for (let i = 0; i < size; i++) {
@@ -9,11 +10,11 @@ export const fillBoard = (size = 8): CellModel[][] => {
       const label = (i + j) % 2 !== 0 ? Label.Dark : Label.Light;
       board[i][j] = new CellModel(label, '', i, j);
 
-      if (i < 3 && (i + j) % 2 === 1) {
+      if (i < pieceRows && (i + j) % 2 === 1) {
         board[i][j] = new CellModel(label, Figure.ComputerMan, i, j);
       }
 
-      if (i > 4 && (i + j) % 2 === 1) {
+      if (i >= size - pieceRows && (i + j) % 2 === 1) {
         board[i][j] = new CellModel(label, Figure.PlayerMan, i, j);
       }
     }
@@ -29,9 +30,9 @@ const checkPlayerMoves = (
   targetX: number,
   targetY: number,
 ) => {
-  if (targetX > 7 || targetX < 0) return false;
+  if (targetX >= board.length || targetX < 0) return false;
 
-  if (targetY > 7 || targetY < 0) return false;
+  if (targetY >= board.length || targetY < 0) return false;
 
   if (!board[currentX][currentY].figure) return false;
 
@@ -55,9 +56,9 @@ const checkPlayerJumps = (
   targetX: number,
   targetY: number,
 ) => {
-  if (targetX > 7 || targetX < 0) return false;
+  if (targetX >= board.length || targetX < 0) return false;
 
-  if (targetY > 7 || targetY < 0) return false;
+  if (targetY >= board.length || targetY < 0) return false;
 
   if (board[crossX][crossY].figure === '') return false;
 
@@ -81,8 +82,8 @@ export const findPlayerAvailableMoves = (board: CellModel[][]) => {
   let availableMoves = [];
   let availableJumps = [];
 
-  for (let m = 0; m < 8; m++) {
-    for (let n = 0; n < 8; n++) {
+  for (let m = 0; m < board.length; m++) {
+    for (let n = 0; n < board.length; n++) {
       if (board[m][n].figure === Figure.PlayerMan) {
         if (checkPlayerMoves(board, m, n, m - 1, n - 1)) availableMoves.push([m, n, m - 1, n - 1]);
         if (checkPlayerMoves(board, m, n, m - 1, n + 1)) availableMoves.push([m, n, m - 1, n + 1]);
@@ -113,10 +114,10 @@ const checkJumps = (
   targetX: number,
   targetY: number,
 ) => {
-  if (targetX > 7 || targetX < 0) {
+  if (targetX >= board.length || targetX < 0) {
     return false;
   }
-  if (targetY > 7 || targetY < 0) {
+  if (targetY >= board.length || targetY < 0) {
     return false;
   }
   if (!board[crossX][crossY].figure) {
@@ -167,9 +168,9 @@ export const shouldPlayerJump = (board: CellModel[][], x: number, y: number) => 
 };
 
 const checkMoves = (board: CellModel[][], currentX: number, currentY: number, targetX: number, targetY: number) => {
-  if (targetX > 7 || targetX < 0) return false;
+  if (targetX >= board.length || targetX < 0) return false;
 
-  if (targetY > 7 || targetY < 0) return false;
+  if (targetY >= board.length || targetY < 0) return false;
 
   if (!board[currentX][currentY].figure) return false;
 
@@ -184,8 +185,8 @@ export const findAvailableMoves = (board: CellModel[][]) => {
   let availableMoves = [];
   let availableJumps = [];
 
-  for (let m = 0; m < 8; m++) {
-    for (let n = 0; n < 8; n++) {
+  for (let m = 0; m < board.length; m++) {
+    for (let n = 0; n < board.length; n++) {
       if (board[m][n].figure === Figure.ComputerMan) {
         if (checkMoves(board, m, n, m + 1, n + 1)) {
           availableMoves.push([m, n, m + 1, n + 1]);
