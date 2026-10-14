@@ -39,7 +39,7 @@ const Board = ({ board, chainFrom, handlePlayerTurn, updateTargetPosition }: Pro
     setPossibleMoves([]);
     if (elemBelow.dataset.x) {
       updateTargetPosition({
-        targetPosition: elemBelow.dataset.x,
+        targetPosition: { x: Number(elemBelow.dataset.x), y: Number(elemBelow.dataset.y) },
         currentCell: cell,
       });
 

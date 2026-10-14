@@ -1,6 +1,7 @@
 import { useReducer, useCallback } from 'react';
 import { InitialStateType } from '../types';
 import { fillBoard, findPlayerAvailableMoves } from '../domain/utils';
+import { createDrawState } from '../domain/game';
 
 const initialBoard = fillBoard();
 const initialState: InitialStateType = {
@@ -12,6 +13,7 @@ const initialState: InitialStateType = {
   targetPosition: null,
   currentCell: null,
   chainFrom: null,
+  draw: createDrawState(initialBoard, 'player'),
 };
 
 type ActionType<T> = {
@@ -33,6 +35,7 @@ const checkersReducer = (state: InitialStateType, action: ActionType<Partial<Ini
         playerTurn: true,
         board: action.payload.board,
         playerPieces: action.payload.playerPieces,
+        draw: action.payload.draw,
       };
     case UPDATE_PLAYER_TURN:
       return {
@@ -44,6 +47,7 @@ const checkersReducer = (state: InitialStateType, action: ActionType<Partial<Ini
         computerPieces: action.payload.computerPieces,
         availableMoves: action.payload.availableMoves,
         board: action.payload.board,
+        draw: action.payload.draw,
       };
     case UPDATE_PLAYER_CHAIN:
       return {

@@ -2,19 +2,29 @@ import React, { useEffect, useState, useCallback } from 'react';
 import Board from './Board';
 import { findPlayerAvailableMoves, findContinuation, applyMove, Move } from './domain/utils';
 import minimax from './domain/minimax';
+import { advanceDrawState, getGameStatus, isProgress, GameStatus } from './domain/game';
 import Node from './domain/Node';
 import CellModel from './entities/CellModel';
 import { PositionCellType } from './types';
 import delay from './helpers/delay';
 import useCheckersState from './hooks/useCheckersState';
 
+const GAME_OVER_MESSAGES: Record<Exclude<GameStatus, 'playing'>, string> = {
+  playerWins: 'Computer has no moves left. You win.',
+  computerWins: 'You have no moves left. You lose.',
+  draw: 'Draw.',
+};
+
 const App = () => {
   const { state, updateComputerTurn, updatePlayerTurn, updatePlayerChain, resetState, updateTargetPosition } =
     useCheckersState();
   const [computerNotification, setComputerNotification] = useState('');
+  const status = getGameStatus(state.board, state.playerTurn ? 'player' : 'computer', state.draw);
 
   useEffect(() => {
     if ((!state.targetPosition || !state.currentCell) && state.playerTurn) return;
+
+    if (status !== 'playing') return;
 
     if (state.playerTurn) {
       handlePlayerTurn(state.currentCell, state.targetPosition);
@@ -27,18 +37,11 @@ const App = () => {
   }, [state.playerTurn]);
 
   useEffect(() => {
-    if (state.playerPieces === 0) {
-      alert('You have no pieces left. You lose.');
-      restart();
-      return;
-    }
+    if (status === 'playing') return;
 
-    if (state.computerPieces === 0) {
-      alert('Computer has no pieces left. You win.');
-      restart();
-      return;
-    }
-  }, [state.playerPieces, state.computerPieces]);
+    alert(GAME_OVER_MESSAGES[status]);
+    restart();
+  }, [status]);
 
   const restart = () => {
     resetState();
@@ -49,9 +52,7 @@ const App = () => {
     (currentCell: CellModel, targetPosition: PositionCellType) => {
       const availableMoves = findPlayerAvailableMoves(state.board, state.chainFrom);
 
-      if (availableMoves.length === 0) {
-        return state.playerPieces > state.computerPieces ? alert('No available moves') : alert('YOU LOSE');
-      }
+      if (availableMoves.length === 0) return;
 
       const currentX = currentCell.x;
       const currentY = currentCell.y;
@@ -76,6 +77,7 @@ const App = () => {
           computerPieces,
           availableMoves,
           board: result.board,
+          draw: advanceDrawState(state.draw, result.board, 'computer', isProgress(state.board, move, result.captured)),
         });
       }
     },
@@ -86,17 +88,7 @@ const App = () => {
     const currentBoardState = new Node(state.board);
     const firstComputerMoves = currentBoardState.getChildren(true);
 
-    if (firstComputerMoves.length === 0) {
-      if (state.playerPieces > state.computerPieces) {
-        alert('Computer has no available moves left. You win');
-        restart();
-        return;
-      }
-
-      alert('Computer has no available moves left. Game ended');
-      restart();
-      return;
-    }
+    if (firstComputerMoves.length === 0) return;
 
     let dict: { [key: number | string]: Node } = {};
     for (let i = 0; i < firstComputerMoves.length; i++) {
@@ -107,12 +99,6 @@ const App = () => {
 
     // best option in the top
     const minimaxKeys = Object.keys(dict).sort((a, b) => Number(b) - Number(a));
-
-    if (minimaxKeys.length === 0) {
-      alert('Computer has cornered itself. You win');
-      restart();
-      return;
-    }
 
     const updatedBoard = dict[minimaxKeys[0]].getBoard();
     const { moves, captures } = dict[minimaxKeys[0]];
@@ -125,6 +111,7 @@ const App = () => {
     updateComputerTurn({
       board: updatedBoard,
       playerPieces: playerPieces,
+      draw: advanceDrawState(state.draw, updatedBoard, 'player', isProgress(state.board, firstMove, captures > 0)),
     });
   }, [state.board]);
 

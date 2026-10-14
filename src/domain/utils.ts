@@ -48,7 +48,7 @@ const sideOf = (figure: Figure | ''): Side | null => {
   return null;
 };
 
-const isKing = (figure: Figure | '') => figure === Figure.PlayerKing || figure === Figure.ComputerKing;
+export const isKing = (figure: Figure | '') => figure === Figure.PlayerKing || figure === Figure.ComputerKing;
 
 const inBounds = (board: CellModel[][], x: number, y: number) =>
   x >= 0 && x < board.length && y >= 0 && y < board.length;
