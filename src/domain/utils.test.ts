@@ -1,6 +1,14 @@
 import { Figure } from '../helpers/constants';
 import CellModel from '../entities/CellModel';
-import { fillBoard, findPlayerAvailableMoves, findAvailableMoves, makeAmove } from './utils';
+import { boardFrom } from './testBoard';
+import {
+  fillBoard,
+  findPlayerAvailableMoves,
+  findAvailableMoves,
+  makeAmove,
+  shouldJump,
+  shouldPlayerJump,
+} from './utils';
 
 const board = fillBoard(8);
 
@@ -72,5 +80,48 @@ describe('test domain utils', () => {
 
     expect(result[4][1].figure).toBe('');
     expect(result[3][2].figure).toBe(Figure.PlayerMan);
+  });
+
+  describe('move generation', () => {
+    it('should let men move forward only', () => {
+      const board = boardFrom(['. . . .', '. p . .', '. . . .', '. . . .']);
+
+      expect(findPlayerAvailableMoves(board)).toEqual([
+        [1, 1, 0, 0],
+        [1, 1, 0, 2],
+      ]);
+    });
+
+    it('should let kings move in every direction', () => {
+      const board = boardFrom(['. . . .', '. . P .', '. . . .', '. . . .']);
+
+      expect(findPlayerAvailableMoves(board)).toHaveLength(4);
+    });
+
+    it('should make a capture the only valid move', () => {
+      const board = boardFrom(['. . . .', '. . c .', '. p . .', 'p . . .']);
+
+      expect(findPlayerAvailableMoves(board)).toEqual([[2, 1, 0, 3]]);
+      expect(shouldPlayerJump(board, 2, 1)).toBe(true);
+      expect(shouldPlayerJump(board, 3, 0)).toBe(false);
+    });
+
+    it('should not jump over own pieces or onto occupied squares', () => {
+      const board = boardFrom(['. . . .', '. . p .', '. p . .', '. . c .']);
+
+      expect(findPlayerAvailableMoves(board).every(([, , toX]) => toX === 1 || toX === 0)).toBe(true);
+      expect(shouldPlayerJump(board, 2, 1)).toBe(false);
+    });
+
+    it('should find computer captures for men and kings', () => {
+      const board = boardFrom(['. . . .', '. c . .', '. . p .', '. . . .']);
+
+      expect(findAvailableMoves(board)).toEqual([[1, 1, 3, 3]]);
+      expect(shouldJump(board, 1, 1)).toBe(true);
+      expect(shouldJump(board, 2, 2)).toBe(false);
+
+      const king = boardFrom(['. . . .', '. . p .', '. . . C', '. . . .']);
+      expect(findAvailableMoves(king)).toEqual([[2, 3, 0, 1]]);
+    });
   });
 });

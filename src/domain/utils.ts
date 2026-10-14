@@ -23,198 +23,92 @@ export const fillBoard = (size = BOARD_SIZE): CellModel[][] => {
   return board;
 };
 
-const checkPlayerMoves = (
-  board: CellModel[][],
-  currentX: number,
-  currentY: number,
-  targetX: number,
-  targetY: number,
-) => {
-  if (targetX >= board.length || targetX < 0) return false;
+export type Move = [fromX: number, fromY: number, toX: number, toY: number];
 
-  if (targetY >= board.length || targetY < 0) return false;
+type Side = 'player' | 'computer';
+type Direction = readonly [dx: number, dy: number];
 
-  if (!board[currentX][currentY].figure) return false;
-
-  if (board[targetX][targetY].figure) return false;
-
-  if (
-    board[currentX][currentY].figure === Figure.ComputerMan ||
-    board[currentX][currentY].figure === Figure.ComputerKing
-  )
-    return false;
-
-  if (!board[targetX][targetY].figure) return true;
+const MAN_DIRECTIONS: Record<Side, Direction[]> = {
+  player: [
+    [-1, -1],
+    [-1, 1],
+  ],
+  computer: [
+    [1, -1],
+    [1, 1],
+  ],
 };
 
-const checkPlayerJumps = (
-  board: CellModel[][],
-  currentX: number,
-  currentY: number,
-  crossX: number,
-  crossY: number,
-  targetX: number,
-  targetY: number,
-) => {
-  if (targetX >= board.length || targetX < 0) return false;
+const KING_DIRECTIONS: Direction[] = [...MAN_DIRECTIONS.player, ...MAN_DIRECTIONS.computer];
 
-  if (targetY >= board.length || targetY < 0) return false;
+const sideOf = (figure: Figure | ''): Side | null => {
+  if (figure === Figure.PlayerMan || figure === Figure.PlayerKing) return 'player';
+  if (figure === Figure.ComputerMan || figure === Figure.ComputerKing) return 'computer';
 
-  if (board[crossX][crossY].figure === '') return false;
-
-  if (board[crossX][crossY].figure === Figure.PlayerKing || board[crossX][crossY].figure === Figure.PlayerMan)
-    return false;
-
-  if (board[targetX][targetY].figure) return false;
-
-  if (board[currentX][currentY].figure === '') return false;
-
-  if (
-    board[currentX][currentY].figure === Figure.ComputerMan ||
-    board[currentX][currentY].figure === Figure.ComputerKing
-  )
-    return false;
-
-  return true;
+  return null;
 };
 
-export const findPlayerAvailableMoves = (board: CellModel[][]) => {
-  let availableMoves = [];
-  let availableJumps = [];
+const isKing = (figure: Figure | '') => figure === Figure.PlayerKing || figure === Figure.ComputerKing;
 
-  for (let m = 0; m < board.length; m++) {
-    for (let n = 0; n < board.length; n++) {
-      if (board[m][n].figure === Figure.PlayerMan) {
-        if (checkPlayerMoves(board, m, n, m - 1, n - 1)) availableMoves.push([m, n, m - 1, n - 1]);
-        if (checkPlayerMoves(board, m, n, m - 1, n + 1)) availableMoves.push([m, n, m - 1, n + 1]);
-        if (checkPlayerJumps(board, m, n, m - 1, n - 1, m - 2, n - 2)) availableJumps.push([m, n, m - 2, n - 2]);
-        if (checkPlayerJumps(board, m, n, m - 1, n + 1, m - 2, n + 2)) availableJumps.push([m, n, m - 2, n + 2]);
-      } else if (board[m][n].figure === Figure.PlayerKing) {
-        if (checkPlayerMoves(board, m, n, m - 1, n - 1)) availableMoves.push([m, n, m - 1, n - 1]);
-        if (checkPlayerMoves(board, m, n, m - 1, n + 1)) availableMoves.push([m, n, m - 1, n + 1]);
-        if (checkPlayerJumps(board, m, n, m - 1, n - 1, m - 2, n - 2)) availableJumps.push([m, n, m - 2, n - 2]);
-        if (checkPlayerJumps(board, m, n, m - 1, n + 1, m - 2, n + 2)) availableJumps.push([m, n, m - 2, n + 2]);
-        if (checkPlayerMoves(board, m, n, m + 1, n - 1)) availableMoves.push([m, n, m + 1, n - 1]);
-        if (checkPlayerJumps(board, m, n, m + 1, n - 1, m + 2, n - 2)) availableJumps.push([m, n, m + 2, n - 2]);
-        if (checkPlayerMoves(board, m, n, m + 1, n + 1)) availableMoves.push([m, n, m + 1, n + 1]);
-        if (checkPlayerJumps(board, m, n, m + 1, n + 1, m + 2, n + 2)) availableJumps.push([m, n, m + 2, n + 2]);
-      }
+const inBounds = (board: CellModel[][], x: number, y: number) =>
+  x >= 0 && x < board.length && y >= 0 && y < board.length;
+
+const findPieceMoves = (board: CellModel[][], x: number, y: number) => {
+  const steps: Move[] = [];
+  const jumps: Move[] = [];
+  const { figure } = board[x][y];
+  const side = sideOf(figure);
+
+  if (!side) return { steps, jumps };
+
+  for (const [dx, dy] of isKing(figure) ? KING_DIRECTIONS : MAN_DIRECTIONS[side]) {
+    const nextX = x + dx;
+    const nextY = y + dy;
+    if (!inBounds(board, nextX, nextY)) continue;
+
+    const nextSide = sideOf(board[nextX][nextY].figure);
+    if (!nextSide) {
+      steps.push([x, y, nextX, nextY]);
+      continue;
+    }
+
+    const landingX = x + 2 * dx;
+    const landingY = y + 2 * dy;
+    if (nextSide !== side && inBounds(board, landingX, landingY) && !board[landingX][landingY].figure) {
+      jumps.push([x, y, landingX, landingY]);
     }
   }
 
-  return availableJumps.length === 0 ? availableMoves : availableJumps;
+  return { steps, jumps };
 };
 
-const checkJumps = (
-  board: CellModel[][],
-  currentX: number,
-  currentY: number,
-  crossX: number,
-  crossY: number,
-  targetX: number,
-  targetY: number,
-) => {
-  if (targetX >= board.length || targetX < 0) {
-    return false;
-  }
-  if (targetY >= board.length || targetY < 0) {
-    return false;
-  }
-  if (!board[crossX][crossY].figure) {
-    return false;
-  }
-  if (board[crossX][crossY].figure === Figure.ComputerKing || board[crossX][crossY].figure === Figure.ComputerMan) {
-    return false;
-  }
-  if (board[targetX][targetY].figure) {
-    return false;
-  }
-  if (!board[currentX][currentY].figure) {
-    return false;
-  }
-  if (board[currentX][currentY].figure === Figure.PlayerMan || board[currentX][currentY].figure === Figure.PlayerKing) {
-    return false;
-  }
+const findSideMoves = (board: CellModel[][], side: Side): Move[] => {
+  const steps: Move[] = [];
+  const jumps: Move[] = [];
 
-  return true;
-};
+  for (let x = 0; x < board.length; x++) {
+    for (let y = 0; y < board.length; y++) {
+      if (sideOf(board[x][y].figure) !== side) continue;
 
-export const shouldJump = (board: CellModel[][], x: number, y: number) => {
-  if (board[x][y].figure === Figure.ComputerMan) {
-    if (checkJumps(board, x, y, x + 1, y - 1, x + 2, y - 2)) return true; // ↙️
-    if (checkJumps(board, x, y, x + 1, y + 1, x + 2, y + 2)) return true; // ↘️
-  } else if (board[x][y].figure === Figure.ComputerKing) {
-    if (checkJumps(board, x, y, x + 1, y - 1, x + 2, y - 2)) return true; // ↙️
-    if (checkJumps(board, x, y, x + 1, y + 1, x + 2, y + 2)) return true; // ↘️
-    if (checkJumps(board, x, y, x - 1, y - 1, x - 2, y - 2)) return true; // ↖️
-    if (checkJumps(board, x, y, x - 1, y + 1, x - 2, y + 2)) return true; // ↗️
-  }
-
-  return false;
-};
-
-export const shouldPlayerJump = (board: CellModel[][], x: number, y: number) => {
-  if (board[x][y].figure === Figure.PlayerMan) {
-    if (checkPlayerJumps(board, x, y, x - 1, y + 1, x - 2, y + 2)) return true; // ↗️
-    if (checkPlayerJumps(board, x, y, x - 1, y - 1, x - 2, y - 2)) return true; // ↖️
-  } else if (board[x][y].figure === Figure.PlayerKing) {
-    if (checkPlayerJumps(board, x, y, x - 1, y + 1, x - 2, y + 2)) return true; // ↗️
-    if (checkPlayerJumps(board, x, y, x - 1, y - 1, x - 2, y - 2)) return true; // ↖️
-    if (checkPlayerJumps(board, x, y, x + 1, y - 1, x + 2, y - 2)) return true; // ↙️
-    if (checkPlayerJumps(board, x, y, x + 1, y + 1, x + 2, y + 2)) return true; // ↘️
-  }
-
-  return false;
-};
-
-const checkMoves = (board: CellModel[][], currentX: number, currentY: number, targetX: number, targetY: number) => {
-  if (targetX >= board.length || targetX < 0) return false;
-
-  if (targetY >= board.length || targetY < 0) return false;
-
-  if (!board[currentX][currentY].figure) return false;
-
-  if (board[targetX][targetY].figure) return false;
-
-  if (board[currentX][currentY].figure === Figure.PlayerKing) return false;
-
-  if (!board[targetX][targetY].figure) return true;
-};
-
-export const findAvailableMoves = (board: CellModel[][]) => {
-  let availableMoves = [];
-  let availableJumps = [];
-
-  for (let m = 0; m < board.length; m++) {
-    for (let n = 0; n < board.length; n++) {
-      if (board[m][n].figure === Figure.ComputerMan) {
-        if (checkMoves(board, m, n, m + 1, n + 1)) {
-          availableMoves.push([m, n, m + 1, n + 1]);
-        }
-        if (checkMoves(board, m, n, m + 1, n - 1)) {
-          availableMoves.push([m, n, m + 1, n - 1]);
-        }
-        if (checkJumps(board, m, n, m + 1, n - 1, m + 2, n - 2)) {
-          availableJumps.push([m, n, m + 2, n - 2]);
-        }
-        if (checkJumps(board, m, n, m + 1, n + 1, m + 2, n + 2)) {
-          availableJumps.push([m, n, m + 2, n + 2]);
-        }
-      } else if (board[m][n].figure === Figure.ComputerKing) {
-        if (checkMoves(board, m, n, m + 1, n + 1)) availableMoves.push([m, n, m + 1, n + 1]);
-        if (checkMoves(board, m, n, m + 1, n - 1)) availableMoves.push([m, n, m + 1, n - 1]);
-        if (checkMoves(board, m, n, m - 1, n - 1)) availableMoves.push([m, n, m - 1, n - 1]);
-        if (checkMoves(board, m, n, m - 1, n + 1)) availableMoves.push([m, n, m - 1, n + 1]);
-        if (checkJumps(board, m, n, m + 1, n - 1, m + 2, n - 2)) availableJumps.push([m, n, m + 2, n - 2]);
-        if (checkJumps(board, m, n, m - 1, n - 1, m - 2, n - 2)) availableJumps.push([m, n, m - 2, n - 2]);
-        if (checkJumps(board, m, n, m - 1, n + 1, m - 2, n + 2)) availableJumps.push([m, n, m - 2, n + 2]);
-        if (checkJumps(board, m, n, m + 1, n + 1, m + 2, n + 2)) availableJumps.push([m, n, m + 2, n + 2]);
-      }
+      const piece = findPieceMoves(board, x, y);
+      steps.push(...piece.steps);
+      jumps.push(...piece.jumps);
     }
   }
 
-  return availableJumps.length === 0 ? availableMoves : availableJumps;
+  // a capture is mandatory
+  return jumps.length === 0 ? steps : jumps;
 };
+
+export const findPlayerAvailableMoves = (board: CellModel[][]) => findSideMoves(board, 'player');
+
+export const findAvailableMoves = (board: CellModel[][]) => findSideMoves(board, 'computer');
+
+export const shouldJump = (board: CellModel[][], x: number, y: number) =>
+  sideOf(board[x][y].figure) === 'computer' && findPieceMoves(board, x, y).jumps.length > 0;
+
+export const shouldPlayerJump = (board: CellModel[][], x: number, y: number) =>
+  sideOf(board[x][y].figure) === 'player' && findPieceMoves(board, x, y).jumps.length > 0;
 
 export const makeAmove = ({
   board,
