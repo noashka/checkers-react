@@ -11,19 +11,19 @@ export default class Node {
     this.move = move;
   }
 
-  getChildren(minimizingPlayer: boolean) {
+  getChildren(computerMoves: boolean) {
     let availableMoves = [];
     let childrenStates = [];
     let king = '';
     let queenRow = 0;
 
-    if (minimizingPlayer) {
+    if (computerMoves) {
       availableMoves = findAvailableMoves(this.board);
-      king = Figure.Computer;
+      king = Figure.ComputerKing;
       queenRow = 7;
     } else {
       availableMoves = findPlayerAvailableMoves(this.board);
-      king = Figure.Player;
+      king = Figure.PlayerKing;
       queenRow = 0;
     }
 

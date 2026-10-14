@@ -25,11 +25,11 @@ describe('test domain utils', () => {
   });
 
   it('should make a move', () => {
-    const result = makeAmove({ board, currentX: 5, currentY: 0, targetX: 4, targetY: 1, king: Figure.Player });
+    const result = makeAmove({ board, currentX: 5, currentY: 0, targetX: 4, targetY: 1, king: Figure.PlayerKing });
     const currentCell = result[5][0];
     const nextCell = result[4][1];
 
     expect(currentCell.figure).toBe('');
-    expect(nextCell.figure).toBe(Figure.player);
+    expect(nextCell.figure).toBe(Figure.PlayerMan);
   });
 });

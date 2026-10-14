@@ -10,11 +10,11 @@ export const fillBoard = (size = 8): CellModel[][] => {
       board[i][j] = new CellModel(label, '', i, j);
 
       if (i < 3 && (i + j) % 2 === 1) {
-        board[i][j] = new CellModel(label, Figure.computer, i, j);
+        board[i][j] = new CellModel(label, Figure.ComputerMan, i, j);
       }
 
       if (i > 4 && (i + j) % 2 === 1) {
-        board[i][j] = new CellModel(label, Figure.player, i, j);
+        board[i][j] = new CellModel(label, Figure.PlayerMan, i, j);
       }
     }
   }
@@ -37,7 +37,7 @@ const checkPlayerMoves = (
 
   if (board[targetX][targetY].figure) return false;
 
-  if (board[currentX][currentY].figure === Figure.computer || board[currentX][currentY].figure === Figure.Computer)
+  if (board[currentX][currentY].figure === Figure.ComputerMan || board[currentX][currentY].figure === Figure.ComputerKing)
     return false;
 
   if (!board[targetX][targetY].figure) return true;
@@ -58,13 +58,13 @@ const checkPlayerJumps = (
 
   if (board[crossX][crossY].figure === '') return false;
 
-  if (board[crossX][crossY].figure === Figure.Player || board[crossX][crossY].figure === Figure.player) return false;
+  if (board[crossX][crossY].figure === Figure.PlayerKing || board[crossX][crossY].figure === Figure.PlayerMan) return false;
 
   if (board[targetX][targetY].figure) return false;
 
   if (board[currentX][currentY].figure === '') return false;
 
-  if (board[currentX][currentY].figure === Figure.computer || board[currentX][currentY].figure === Figure.Computer)
+  if (board[currentX][currentY].figure === Figure.ComputerMan || board[currentX][currentY].figure === Figure.ComputerKing)
     return false;
 
   return true;
@@ -76,12 +76,12 @@ export const findPlayerAvailableMoves = (board: CellModel[][]) => {
 
   for (let m = 0; m < 8; m++) {
     for (let n = 0; n < 8; n++) {
-      if (board[m][n].figure === Figure.player) {
+      if (board[m][n].figure === Figure.PlayerMan) {
         if (checkPlayerMoves(board, m, n, m - 1, n - 1)) availableMoves.push([m, n, m - 1, n - 1]);
         if (checkPlayerMoves(board, m, n, m - 1, n + 1)) availableMoves.push([m, n, m - 1, n + 1]);
         if (checkPlayerJumps(board, m, n, m - 1, n - 1, m - 2, n - 2)) availableJumps.push([m, n, m - 2, n - 2]);
         if (checkPlayerJumps(board, m, n, m - 1, n + 1, m - 2, n + 2)) availableJumps.push([m, n, m - 2, n + 2]);
-      } else if (board[m][n].figure === Figure.Player) {
+      } else if (board[m][n].figure === Figure.PlayerKing) {
         if (checkPlayerMoves(board, m, n, m - 1, n - 1)) availableMoves.push([m, n, m - 1, n - 1]);
         if (checkPlayerMoves(board, m, n, m - 1, n + 1)) availableMoves.push([m, n, m - 1, n + 1]);
         if (checkPlayerJumps(board, m, n, m - 1, n - 1, m - 2, n - 2)) availableJumps.push([m, n, m - 2, n - 2]);
@@ -115,7 +115,7 @@ const checkJumps = (
   if (!board[crossX][crossY].figure) {
     return false;
   }
-  if (board[crossX][crossY].figure === Figure.Computer || board[crossX][crossY].figure === Figure.computer) {
+  if (board[crossX][crossY].figure === Figure.ComputerKing || board[crossX][crossY].figure === Figure.ComputerMan) {
     return false;
   }
   if (board[targetX][targetY].figure) {
@@ -124,7 +124,7 @@ const checkJumps = (
   if (!board[currentX][currentY].figure) {
     return false;
   }
-  if (board[currentX][currentY].figure === Figure.player || board[currentX][currentY].figure === Figure.Player) {
+  if (board[currentX][currentY].figure === Figure.PlayerMan || board[currentX][currentY].figure === Figure.PlayerKing) {
     return false;
   }
 
@@ -132,10 +132,10 @@ const checkJumps = (
 };
 
 export const shouldJump = (board: CellModel[][], x: number, y: number) => {
-  if (board[x][y].figure === Figure.computer) {
+  if (board[x][y].figure === Figure.ComputerMan) {
     if (checkJumps(board, x, y, x + 1, y - 1, x + 2, y - 2)) return true; // ↙️
     if (checkJumps(board, x, y, x + 1, y + 1, x + 2, y + 2)) return true; // ↘️
-  } else if (board[x][y].figure === Figure.Computer) {
+  } else if (board[x][y].figure === Figure.ComputerKing) {
     if (checkJumps(board, x, y, x + 1, y - 1, x + 2, y - 2)) return true; // ↙️
     if (checkJumps(board, x, y, x + 1, y + 1, x + 2, y + 2)) return true; // ↘️
     if (checkJumps(board, x, y, x - 1, y - 1, x - 2, y - 2)) return true; // ↖️
@@ -146,10 +146,10 @@ export const shouldJump = (board: CellModel[][], x: number, y: number) => {
 };
 
 export const shouldPlayerJump = (board: CellModel[][], x: number, y: number) => {
-  if (board[x][y].figure === Figure.player) {
+  if (board[x][y].figure === Figure.PlayerMan) {
     if (checkPlayerJumps(board, x, y, x - 1, y + 1, x - 2, y + 2)) return true; // ↗️
     if (checkPlayerJumps(board, x, y, x - 1, y - 1, x - 2, y - 2)) return true; // ↖️
-  } else if (board[x][y].figure === Figure.Player) {
+  } else if (board[x][y].figure === Figure.PlayerKing) {
     if (checkPlayerJumps(board, x, y, x - 1, y + 1, x - 2, y + 2)) return true; // ↗️
     if (checkPlayerJumps(board, x, y, x - 1, y - 1, x - 2, y - 2)) return true; // ↖️
     if (checkPlayerJumps(board, x, y, x + 1, y - 1, x + 2, y - 2)) return true; // ↙️
@@ -168,7 +168,7 @@ const checkMoves = (board: CellModel[][], currentX: number, currentY: number, ta
 
   if (board[targetX][targetY].figure) return false;
 
-  if (board[currentX][currentY].figure === Figure.Player) return false;
+  if (board[currentX][currentY].figure === Figure.PlayerKing) return false;
 
   if (!board[targetX][targetY].figure) return true;
 };
@@ -179,7 +179,7 @@ export const findAvailableMoves = (board: CellModel[][]) => {
 
   for (let m = 0; m < 8; m++) {
     for (let n = 0; n < 8; n++) {
-      if (board[m][n].figure === Figure.computer) {
+      if (board[m][n].figure === Figure.ComputerMan) {
         if (checkMoves(board, m, n, m + 1, n + 1)) {
           availableMoves.push([m, n, m + 1, n + 1]);
         }
@@ -192,7 +192,7 @@ export const findAvailableMoves = (board: CellModel[][]) => {
         if (checkJumps(board, m, n, m + 1, n + 1, m + 2, n + 2)) {
           availableJumps.push([m, n, m + 2, n + 2]);
         }
-      } else if (board[m][n].figure === Figure.Computer) {
+      } else if (board[m][n].figure === Figure.ComputerKing) {
         if (checkMoves(board, m, n, m + 1, n + 1)) availableMoves.push([m, n, m + 1, n + 1]);
         if (checkMoves(board, m, n, m + 1, n - 1)) availableMoves.push([m, n, m + 1, n - 1]);
         if (checkMoves(board, m, n, m - 1, n - 1)) availableMoves.push([m, n, m - 1, n - 1]);

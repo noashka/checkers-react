@@ -28,8 +28,8 @@ const Square = ({ cell, onDragStart, onDragEnd, onDragOver, available }: Props) 
         <span
           draggable
           className={cn('figure', {
-            dark: cell.figure === Figure.player || cell.figure === Figure.Player,
-            queen: cell.figure === Figure.Player || cell.figure === Figure.Computer,
+            dark: cell.figure === Figure.PlayerMan || cell.figure === Figure.PlayerKing,
+            queen: cell.figure === Figure.PlayerKing || cell.figure === Figure.ComputerKing,
           })}
         />
       ) : null}

@@ -61,7 +61,7 @@ const App = () => {
       const newMove = [currentX, currentY, targetX, targetY].toString();
 
       if (availableMoves.some((move) => move.toString() === newMove)) {
-        newBoard = makeAmove({ board: state.board, currentX, currentY, targetX, targetY, king: Figure.Player });
+        newBoard = makeAmove({ board: state.board, currentX, currentY, targetX, targetY, king: Figure.PlayerKing });
         let computerPieces = state.computerPieces;
         if (shouldPlayerJump(state.board, currentX, currentY)) computerPieces--;
 
