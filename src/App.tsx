@@ -1,9 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import Board from './Board';
 import { findPlayerAvailableMoves, findContinuation, applyMove, Move } from './domain/utils';
-import minimax from './domain/minimax';
+import { findBestMove } from './domain/bestMove';
 import { advanceDrawState, getGameStatus, isProgress, GameStatus } from './domain/game';
-import Node from './domain/Node';
 import CellModel from './entities/CellModel';
 import { PositionCellType } from './types';
 import delay from './helpers/delay';
@@ -85,33 +84,19 @@ const App = () => {
   );
 
   const handleComputerTurn = useCallback(() => {
-    const currentBoardState = new Node(state.board);
-    const firstComputerMoves = currentBoardState.getChildren(true);
+    const best = findBestMove(state.board);
+    if (!best) return;
 
-    if (firstComputerMoves.length === 0) return;
-
-    let dict: { [key: number | string]: Node } = {};
-    for (let i = 0; i < firstComputerMoves.length; i++) {
-      const child: Node = firstComputerMoves[i];
-      const value = minimax(child.getBoard(), 1, -Infinity, Infinity, false);
-      dict[value] = child;
-    }
-
-    // best option in the top
-    const minimaxKeys = Object.keys(dict).sort((a, b) => Number(b) - Number(a));
-
-    const updatedBoard = dict[minimaxKeys[0]].getBoard();
-    const { moves, captures } = dict[minimaxKeys[0]];
-    const playerPieces = state.playerPieces - captures;
+    const { moves, captures, board } = best;
     const [firstMove] = moves;
     setComputerNotification(
       `from [${firstMove[0]}, ${firstMove[1]}]` + moves.map(([, , x, y]) => ` to [${x}, ${y}]`).join(''),
     );
 
     updateComputerTurn({
-      board: updatedBoard,
-      playerPieces: playerPieces,
-      draw: advanceDrawState(state.draw, updatedBoard, 'player', isProgress(state.board, firstMove, captures > 0)),
+      board,
+      playerPieces: state.playerPieces - captures,
+      draw: advanceDrawState(state.draw, board, 'player', isProgress(state.board, firstMove, captures > 0)),
     });
   }, [state.board]);
 
