@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import Board from './Board';
-import { findPlayerAvailableMoves, applyMove, shouldPlayerJump, shouldJump } from './domain/utils';
+import { findPlayerAvailableMoves, findJumpsFrom, applyMove, shouldJump } from './domain/utils';
 import minimax from './domain/minimax';
 import Node from './domain/Node';
 import CellModel from './entities/CellModel';
@@ -9,7 +9,8 @@ import delay from './helpers/delay';
 import useCheckersState from './hooks/useCheckersState';
 
 const App = () => {
-  const { state, updateComputerTurn, updatePlayerTurn, resetState, updateTargetPosition } = useCheckersState();
+  const { state, updateComputerTurn, updatePlayerTurn, updatePlayerChain, resetState, updateTargetPosition } =
+    useCheckersState();
   const [computerNotification, setComputerNotification] = useState('');
 
   useEffect(() => {
@@ -46,8 +47,7 @@ const App = () => {
 
   const handlePlayerTurn = useCallback(
     (currentCell: CellModel, targetPosition: PositionCellType) => {
-      let newBoard: CellModel[][] = [];
-      const availableMoves = findPlayerAvailableMoves(state.board);
+      const availableMoves = findPlayerAvailableMoves(state.board, state.chainFrom);
 
       if (availableMoves.length === 0) {
         return state.playerPieces > state.computerPieces ? alert('No available moves') : alert('YOU LOSE');
@@ -62,14 +62,19 @@ const App = () => {
       const newMove = [currentX, currentY, targetX, targetY].toString();
 
       if (availableMoves.some((move) => move.toString() === newMove)) {
-        newBoard = applyMove(state.board, [currentX, currentY, targetX, targetY]).board;
-        let computerPieces = state.computerPieces;
-        if (shouldPlayerJump(state.board, currentX, currentY)) computerPieces--;
+        const result = applyMove(state.board, [currentX, currentY, targetX, targetY]);
+        const computerPieces = result.captured ? state.computerPieces - 1 : state.computerPieces;
+
+        // a capture must be continued with the same piece while it can still jump
+        if (result.captured && findJumpsFrom(result.board, targetX, targetY).length > 0) {
+          updatePlayerChain({ computerPieces, board: result.board, chainFrom: { x: targetX, y: targetY } });
+          return;
+        }
 
         updatePlayerTurn({
           computerPieces,
           availableMoves,
-          board: newBoard,
+          board: result.board,
         });
       }
     },
@@ -131,7 +136,12 @@ const App = () => {
         </ul>
         <p>Computer moves - {computerNotification}</p>
       </div>
-      <Board handlePlayerTurn={handlePlayerTurn} updateTargetPosition={updateTargetPosition} board={state.board} />
+      <Board
+        chainFrom={state.chainFrom}
+        handlePlayerTurn={handlePlayerTurn}
+        updateTargetPosition={updateTargetPosition}
+        board={state.board}
+      />
     </div>
   );
 };

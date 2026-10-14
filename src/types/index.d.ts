@@ -6,6 +6,7 @@ export type InitialStateType = {
   availableMoves: number[][];
   targetPosition: Position | null;
   currentCell: CellModel | null;
+  chainFrom: PositionCellType | null;
 };
 
 export type PositionCellType = {

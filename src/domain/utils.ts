@@ -82,13 +82,17 @@ const findPieceMoves = (board: CellModel[][], x: number, y: number) => {
   return { steps, jumps };
 };
 
-const findSideMoves = (board: CellModel[][], side: Side): Move[] => {
+export type Position = { x: number; y: number };
+
+const findSideMoves = (board: CellModel[][], side: Side, chainFrom?: Position | null): Move[] => {
   const steps: Move[] = [];
   const jumps: Move[] = [];
 
   for (let x = 0; x < board.length; x++) {
     for (let y = 0; y < board.length; y++) {
       if (sideOf(board[x][y].figure) !== side) continue;
+      // mid-capture only the piece that just jumped may move, and only by jumping
+      if (chainFrom && (chainFrom.x !== x || chainFrom.y !== y)) continue;
 
       const piece = findPieceMoves(board, x, y);
       steps.push(...piece.steps);
@@ -97,10 +101,15 @@ const findSideMoves = (board: CellModel[][], side: Side): Move[] => {
   }
 
   // a capture is mandatory
-  return jumps.length === 0 ? steps : jumps;
+  return jumps.length === 0 && !chainFrom ? steps : jumps;
 };
 
-export const findPlayerAvailableMoves = (board: CellModel[][]) => findSideMoves(board, 'player');
+/** Jumps the piece on (x, y) can make, i.e. how a capture sequence may continue from there */
+export const findJumpsFrom = (board: CellModel[][], x: number, y: number): Move[] => findPieceMoves(board, x, y).jumps;
+
+/** Pass chainFrom while the player is in the middle of a capture sequence */
+export const findPlayerAvailableMoves = (board: CellModel[][], chainFrom?: Position | null) =>
+  findSideMoves(board, 'player', chainFrom);
 
 export const findAvailableMoves = (board: CellModel[][]) => findSideMoves(board, 'computer');
 

@@ -6,6 +6,7 @@ import {
   findPlayerAvailableMoves,
   findAvailableMoves,
   applyMove,
+  findJumpsFrom,
   Move,
   shouldJump,
   shouldPlayerJump,
@@ -116,6 +117,28 @@ describe('test domain utils', () => {
 
       const king = boardFrom(['. . . .', '. . p .', '. . . C', '. . . .']);
       expect(findAvailableMoves(king)).toEqual([[2, 3, 0, 1]]);
+    });
+  });
+
+  describe('capture sequences', () => {
+    const board = boardFrom(['. . . . . .', '. . c . . .', '. . . . . .', '. . c . . .', '. . . p . p', '. . . . . .']);
+
+    it('should list the jumps a piece can continue with', () => {
+      expect(findJumpsFrom(board, 4, 3)).toEqual([[4, 3, 2, 1]]);
+      expect(findJumpsFrom(board, 4, 5)).toEqual([]);
+    });
+
+    it('should restrict a chain to the piece that just jumped', () => {
+      expect(findPlayerAvailableMoves(board)).toEqual([[4, 3, 2, 1]]);
+      expect(findPlayerAvailableMoves(board, { x: 4, y: 3 })).toEqual([[4, 3, 2, 1]]);
+      expect(findPlayerAvailableMoves(board, { x: 4, y: 5 })).toEqual([]);
+    });
+
+    it('should not offer plain steps in the middle of a chain', () => {
+      const open = boardFrom(['. . . .', '. . . .', '. p . .', '. . . .']);
+
+      expect(findPlayerAvailableMoves(open)).toHaveLength(2);
+      expect(findPlayerAvailableMoves(open, { x: 2, y: 1 })).toEqual([]);
     });
   });
 
