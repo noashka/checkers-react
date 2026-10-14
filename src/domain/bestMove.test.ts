@@ -16,7 +16,7 @@ describe('findBestMove', () => {
 
   it('should play a legal turn from the initial position', () => {
     const board = fillBoard();
-    const best = findBestMove(board, 3);
+    const best = findBestMove(board, { maxDepth: 3, timeLimitMs: Infinity });
 
     expect(best).not.toBeNull();
     const [fromX, fromY] = best!.moves[0];
@@ -28,6 +28,27 @@ describe('findBestMove', () => {
     // stepping to (3, 2) lets the player capture it, stepping to the edge (3, 0) is safe
     const board = boardFrom(['. . . . . .', '. . . . . .', '. c . . . .', '. . . . . .', '. . . p . .', '. . . . . .']);
 
-    expect(findBestMove(board, 3)?.moves).toEqual([[2, 1, 3, 0]]);
+    expect(findBestMove(board, { maxDepth: 3, timeLimitMs: Infinity })?.moves).toEqual([[2, 1, 3, 0]]);
+  });
+
+  it('should search as deep as allowed when there is no time limit', () => {
+    const best = findBestMove(fillBoard(), { maxDepth: 4, timeLimitMs: Infinity });
+
+    expect(best?.depth).toBe(4);
+  });
+
+  it('should still return a move when the time limit is already exhausted', () => {
+    const best = findBestMove(fillBoard(), { maxDepth: 10, timeLimitMs: 0 });
+
+    expect(best).not.toBeNull();
+    expect(best?.depth).toBe(1);
+  });
+
+  it('should agree with a fixed-depth search on the chosen score', () => {
+    const board = boardFrom(['. . . . . .', '. . . . . .', '. c . . . .', '. . . . . .', '. . . p . .', '. . . . . .']);
+    const deep = findBestMove(board, { maxDepth: 5, timeLimitMs: Infinity });
+
+    expect(deep?.moves).toEqual([[2, 1, 3, 0]]);
+    expect(deep?.depth).toBe(5);
   });
 });
