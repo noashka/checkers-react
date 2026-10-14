@@ -31,12 +31,7 @@ export const createDrawState = (board: CellModel[][], sideToMove: Side): DrawSta
 export const isProgress = (boardBefore: CellModel[][], [fromX, fromY]: Move, captured: boolean) =>
   captured || !isKing(boardBefore[fromX][fromY].figure);
 
-export const advanceDrawState = (
-  draw: DrawState,
-  board: CellModel[][],
-  sideToMove: Side,
-  progress: boolean,
-) => {
+export const advanceDrawState = (draw: DrawState, board: CellModel[][], sideToMove: Side, progress: boolean) => {
   const key = positionKey(board, sideToMove);
 
   return {

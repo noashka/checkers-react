@@ -73,4 +73,35 @@ describe('calculateHeuristics', () => {
     expect(score('C')).toBeLessThan(twoMen);
     expect(score('P')).toBe(-score('C'));
   });
+
+  describe('flying kings', () => {
+    const E8 = '. . . . . . . .';
+
+    it('should see a king threatening and attacking from a distance', () => {
+      const hanging = boardFrom([E8, '. P . . . . . .', E8, E8, '. . . . c . . .', E8, E8, E8]);
+
+      // computer man 1000 - threat 3; player king 1600 + attack 6 (one diagonal, however many landing squares)
+      expect(calculateHeuristics(hanging)).toBe(1000 - 3 - (1600 + 6));
+    });
+
+    it('should not see a threat when the landing square behind the piece is taken', () => {
+      const covered = boardFrom([E8, '. P . . . . . .', E8, E8, '. . . . c . . .', '. . . . . c . .', E8, E8]);
+
+      // two men 2000 against the king 1600, nobody can capture
+      expect(calculateHeuristics(covered)).toBe(400);
+    });
+
+    it('should not see a threat from a king that has a man in its way', () => {
+      const shielded = boardFrom([E8, '. P . . . . . .', '. . p . . . . .', E8, '. . . . c . . .', E8, E8, E8]);
+
+      // computer man 1000 against the player's man and king, 1000 + 1600
+      expect(calculateHeuristics(shielded)).toBe(1000 - (1000 + 1600));
+    });
+
+    it('should not see a threat from a man that is not next to the piece', () => {
+      const distant = boardFrom([E8, '. p . . . . . .', E8, E8, '. . . . c . . .', E8, E8, E8]);
+
+      expect(calculateHeuristics(distant)).toBe(0);
+    });
+  });
 });

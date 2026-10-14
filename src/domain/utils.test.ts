@@ -91,7 +91,7 @@ describe('test domain utils', () => {
     it('should let kings move in every direction', () => {
       const board = boardFrom(['. . . .', '. . P .', '. . . .', '. . . .']);
 
-      expect(findPlayerAvailableMoves(board)).toHaveLength(4);
+      expect(findPlayerAvailableMoves(board)).toHaveLength(5);
     });
 
     it('should make a capture the only valid move', () => {
@@ -136,6 +136,67 @@ describe('test domain utils', () => {
     });
   });
 
+  describe('flying kings', () => {
+    const E = '. . . . . . . .';
+
+    it('should move any distance along an open diagonal and stop at the first piece', () => {
+      const board = boardFrom([E, E, E, '. . . P . . . .', E, '. . . . . p . .', E, E]);
+      const targets = findPlayerAvailableMoves(board)
+        .filter(([fromX]) => fromX === 3)
+        .map(([, , x, y]) => `${x},${y}`);
+
+      // down-right is blocked by the own man at (5, 5), so (4, 4) is the last square on that diagonal
+      expect(targets).toContain('4,4');
+      expect(targets).not.toContain('5,5');
+      expect(targets).toContain('0,0');
+      expect(targets).toContain('6,0');
+      expect(targets).toContain('0,6');
+    });
+
+    it('should capture from a distance and land on any free square behind the victim', () => {
+      const board = boardFrom([E, E, E, '. . . . . . . P', E, '. . . . . c . .', E, E]);
+
+      expect(findPlayerAvailableMoves(board)).toEqual([
+        [3, 7, 6, 4],
+        [3, 7, 7, 3],
+      ]);
+    });
+
+    it('should capture a piece several squares away', () => {
+      const board = boardFrom(['P . . . . . . .', E, E, E, '. . . . c . . .', E, E, E]);
+
+      expect(findPlayerAvailableMoves(board)).toEqual([
+        [0, 0, 5, 5],
+        [0, 0, 6, 6],
+        [0, 0, 7, 7],
+      ]);
+
+      const result = applyMove(board, [0, 0, 6, 6]);
+      expect(result.captured).toBe(true);
+      expect(result.board[4][4].figure).toBe('');
+      expect(result.board[6][6].figure).toBe(Figure.PlayerKing);
+      expect(result.board[0][0].figure).toBe('');
+    });
+
+    it('should not jump two pieces in a row, own pieces, or onto an occupied square', () => {
+      const twoInARow = boardFrom(['P . . . . . . .', '. c . . . . . .', '. . c . . . . .', E, E, E, E, E]);
+      const ownPiece = boardFrom(['P . . . . . . .', '. p . . . . . .', E, E, E, E, E, E]);
+      const blockedLanding = boardFrom(['P . . . . . . .', '. c . . . . . .', '. . p . . . . .', E, E, E, E, E]);
+
+      expect(findJumpsFrom(twoInARow, 0, 0)).toEqual([]);
+      expect(findJumpsFrom(ownPiece, 0, 0)).toEqual([]);
+      expect(findJumpsFrom(blockedLanding, 0, 0)).toEqual([]);
+      expect(() => applyMove(twoInARow, [0, 0, 3, 3])).toThrow('Illegal move');
+    });
+
+    it('should let a king continue a capture with another long jump', () => {
+      const board = boardFrom(['P . . . . . . .', E, '. . c . . . . .', E, E, '. c . . . . . .', E, E]);
+      const move: Move = [0, 0, 3, 3];
+
+      expect(findContinuation(applyMove(board, move), move)).toEqual([[3, 3, 6, 0]]);
+    });
+  });
+
   describe('capture sequences', () => {
     const board = boardFrom(['. . . . . .', '. . c . . .', '. . . . . .', '. . c . . .', '. . . p . p', '. . . . . .']);
 
@@ -173,7 +234,10 @@ describe('test domain utils', () => {
 
       expect(result.promoted).toBe(true);
       // as a king the piece could jump again, but promotion ends the turn
-      expect(findJumpsFrom(result.board, 0, 2)).toEqual([[0, 2, 2, 4]]);
+      expect(findJumpsFrom(result.board, 0, 2)).toEqual([
+        [0, 2, 2, 4],
+        [0, 2, 3, 5],
+      ]);
       expect(findContinuation(result, move)).toEqual([]);
     });
 

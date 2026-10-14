@@ -5,15 +5,18 @@ and move first.
 
 ## Rules
 
-English/American draughts on an 8x8 board, 12 pieces per side:
+Draughts on an 8x8 board, 12 pieces per side, with Russian-style capture rules (flying kings, backward captures):
 
-- Men move one square diagonally forward onto an empty square. Kings (a man that reaches the far row) move one
-  square diagonally in any direction.
-- A capture jumps over an adjacent opposing piece onto the empty square behind it, in any of the four diagonal
-  directions: men may capture backwards too, even though they cannot step backwards.
+- Men move one square diagonally forward onto an empty square. A man that reaches the far row becomes a king.
+- Kings are "flying": they move any number of free squares along a diagonal, in any direction.
+- A capture jumps over an opposing piece and lands behind it, in any of the four diagonal directions, so men may
+  capture backwards even though they cannot step backwards. A man jumps a piece right next to it; a king may jump a
+  piece at any distance along an open diagonal and land on any free square behind it, as long as there is exactly
+  one piece on the way.
 - **A capture is mandatory.** If any piece can capture, only captures are valid moves.
 - **Capture sequences.** After a capture the same piece must keep jumping while it can. A man promoted by a capture
-  ends its turn there, even if the new king could continue.
+  ends its turn there, even if the new king could continue. A king may pick any landing square behind the captured
+  piece and continue from it.
 - **Winning.** A side that has no pieces or no legal move loses.
 - **Draws.** The game is drawn after 80 plies (40 moves each) without a capture or man move, or when the same
   position occurs three times.

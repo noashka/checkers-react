@@ -65,22 +65,34 @@ const findPieceMoves = (board: CellModel[][], x: number, y: number) => {
   if (!side) return { steps, jumps };
 
   const stepDirections = stepDirectionsOf(figure as Figure, side);
+  // men look one square ahead, kings along the whole diagonal
+  const reach = isKing(figure) ? board.length : 1;
 
   for (const [dx, dy] of CAPTURE_DIRECTIONS) {
-    const nextX = x + dx;
-    const nextY = y + dy;
-    if (!inBounds(board, nextX, nextY)) continue;
+    const canStep = stepDirections.some(([sx, sy]) => sx === dx && sy === dy);
 
-    const nextSide = sideOf(board[nextX][nextY].figure);
-    if (!nextSide) {
-      if (stepDirections.some(([sx, sy]) => sx === dx && sy === dy)) steps.push([x, y, nextX, nextY]);
-      continue;
-    }
+    for (let distance = 1; distance <= reach; distance++) {
+      const nextX = x + distance * dx;
+      const nextY = y + distance * dy;
+      if (!inBounds(board, nextX, nextY)) break;
 
-    const landingX = x + 2 * dx;
-    const landingY = y + 2 * dy;
-    if (nextSide !== side && inBounds(board, landingX, landingY) && !board[landingX][landingY].figure) {
-      jumps.push([x, y, landingX, landingY]);
+      const nextSide = sideOf(board[nextX][nextY].figure);
+      if (!nextSide) {
+        if (canStep) steps.push([x, y, nextX, nextY]);
+        continue;
+      }
+
+      // the first piece on the diagonal blocks it; an opposing one can be jumped onto any free square behind it
+      if (nextSide !== side) {
+        for (let landing = distance + 1; landing <= distance + reach; landing++) {
+          const landingX = x + landing * dx;
+          const landingY = y + landing * dy;
+          if (!inBounds(board, landingX, landingY) || board[landingX][landingY].figure) break;
+
+          jumps.push([x, y, landingX, landingY]);
+        }
+      }
+      break;
     }
   }
 
@@ -146,11 +158,18 @@ export const applyMove = (board: CellModel[][], move: Move): MoveResult => {
 
   const { figure } = board[fromX][fromY];
   const side = sideOf(figure);
-  const captured = Math.abs(toX - fromX) === 2;
+  const stepX = Math.sign(toX - fromX);
+  const stepY = Math.sign(toY - fromY);
+  // a legal move passes over at most one piece, and only a capture does
+  let victim: [number, number] | null = null;
+  for (let x = fromX + stepX, y = fromY + stepY; x !== toX; x += stepX, y += stepY) {
+    if (board[x][y].figure) victim = [x, y];
+  }
+  const captured = victim !== null;
   const promoted = side !== null && !isKing(figure) && toX === promotionRow(board, side);
 
-  if (captured) {
-    setFigure((fromX + toX) / 2, (fromY + toY) / 2, '');
+  if (victim) {
+    setFigure(victim[0], victim[1], '');
   }
 
   setFigure(fromX, fromY, '');
