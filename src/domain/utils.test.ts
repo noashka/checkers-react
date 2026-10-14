@@ -5,7 +5,7 @@ import {
   fillBoard,
   findPlayerAvailableMoves,
   findAvailableMoves,
-  makeAmove,
+  applyMove,
   shouldJump,
   shouldPlayerJump,
 } from './utils';
@@ -49,7 +49,7 @@ describe('test domain utils', () => {
   });
 
   it('should make a move', () => {
-    const result = makeAmove({ board, currentX: 5, currentY: 0, targetX: 4, targetY: 1, king: Figure.PlayerKing });
+    const result = applyMove(board, [5, 0, 4, 1]).board;
     const currentCell = result[5][0];
     const nextCell = result[4][1];
 
@@ -61,7 +61,7 @@ describe('test domain utils', () => {
     const source = fillBoard(8);
     const snapshot = JSON.stringify(source);
 
-    makeAmove({ board: source, currentX: 5, currentY: 0, targetX: 4, targetY: 1, king: Figure.PlayerKing });
+    applyMove(source, [5, 0, 4, 1]);
 
     expect(JSON.stringify(source)).toBe(snapshot);
   });
@@ -69,14 +69,7 @@ describe('test domain utils', () => {
   it('should remove the captured piece on a jump', () => {
     const source = fillBoard(8);
     source[4][1] = new CellModel(source[4][1].label, Figure.ComputerMan, 4, 1);
-    const result = makeAmove({
-      board: source,
-      currentX: 5,
-      currentY: 0,
-      targetX: 3,
-      targetY: 2,
-      king: Figure.PlayerKing,
-    });
+    const result = applyMove(source, [5, 0, 3, 2]).board;
 
     expect(result[4][1].figure).toBe('');
     expect(result[3][2].figure).toBe(Figure.PlayerMan);
@@ -122,6 +115,34 @@ describe('test domain utils', () => {
 
       const king = boardFrom(['. . . .', '. . p .', '. . . C', '. . . .']);
       expect(findAvailableMoves(king)).toEqual([[2, 3, 0, 1]]);
+    });
+  });
+
+  describe('applyMove', () => {
+    it('should promote a man that reaches the far row', () => {
+      const board = boardFrom(['. . . .', 'p . . .', '. . . .', '. . . c']);
+
+      const player = applyMove(board, [1, 0, 0, 1]);
+      expect(player.promoted).toBe(true);
+      expect(player.board[0][1].figure).toBe(Figure.PlayerKing);
+
+      const computer = applyMove(board, [3, 3, 2, 2]);
+      expect(computer.promoted).toBe(false);
+    });
+
+    it('should not report a king move as promotion', () => {
+      const board = boardFrom(['. . . .', 'P . . .', '. . . .', '. . . .']);
+      const result = applyMove(board, [1, 0, 0, 1]);
+
+      expect(result.promoted).toBe(false);
+      expect(result.board[0][1].figure).toBe(Figure.PlayerKing);
+    });
+
+    it('should report captures', () => {
+      const board = boardFrom(['. . . .', '. c . .', 'p . . .', '. . . .']);
+
+      expect(applyMove(board, [2, 0, 0, 2]).captured).toBe(true);
+      expect(applyMove(boardFrom(['. . . .', '. . . .', 'p . . .', '. . . .']), [2, 0, 1, 1]).captured).toBe(false);
     });
   });
 });

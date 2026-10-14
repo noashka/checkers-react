@@ -110,43 +110,36 @@ export const shouldJump = (board: CellModel[][], x: number, y: number) =>
 export const shouldPlayerJump = (board: CellModel[][], x: number, y: number) =>
   sideOf(board[x][y].figure) === 'player' && findPieceMoves(board, x, y).jumps.length > 0;
 
-export const makeAmove = ({
-  board,
-  currentX,
-  currentY,
-  targetX,
-  targetY,
-  king,
-  queenRow = 0,
-}: {
+export type MoveResult = {
   board: CellModel[][];
-  currentX: number;
-  currentY: number;
-  targetX: number;
-  targetY: number;
-  king: string;
-  queenRow?: number;
-}): CellModel[][] => {
+  captured: boolean;
+  promoted: boolean;
+};
+
+const promotionRow = (board: CellModel[][], side: Side) => (side === 'player' ? 0 : board.length - 1);
+
+export const applyMove = (board: CellModel[][], [fromX, fromY, toX, toY]: Move): MoveResult => {
   // Rows are copied, cells are replaced rather than mutated, so untouched cells are shared between boards
   const newBoard = board.map((row) => row.slice());
   const setFigure = (x: number, y: number, figure: Figure | '') => {
     newBoard[x][y] = new CellModel(newBoard[x][y].label, figure, x, y);
   };
 
-  let { figure } = newBoard[currentX][currentY];
-  const dx = currentX - targetX;
-  const dy = currentY - targetY;
+  const { figure } = board[fromX][fromY];
+  const side = sideOf(figure);
+  const captured = Math.abs(toX - fromX) === 2;
+  const promoted = side !== null && !isKing(figure) && toX === promotionRow(board, side);
 
-  if (Math.abs(dx) === 2 && Math.abs(dy) === 2) {
-    setFigure(currentX - dx / 2, currentY - dy / 2, '');
+  if (captured) {
+    setFigure((fromX + toX) / 2, (fromY + toY) / 2, '');
   }
 
-  if (Number(targetX) === queenRow) {
-    figure = king as Figure;
+  setFigure(fromX, fromY, '');
+  if (promoted) {
+    setFigure(toX, toY, side === 'player' ? Figure.PlayerKing : Figure.ComputerKing);
+  } else {
+    setFigure(toX, toY, figure);
   }
 
-  setFigure(currentX, currentY, '');
-  setFigure(Number(targetX), targetY, figure);
-
-  return newBoard;
+  return { board: newBoard, captured, promoted };
 };

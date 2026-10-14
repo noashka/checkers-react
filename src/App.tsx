@@ -1,13 +1,12 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import Board from './Board';
-import { findPlayerAvailableMoves, makeAmove, shouldPlayerJump, shouldJump } from './domain/utils';
+import { findPlayerAvailableMoves, applyMove, shouldPlayerJump, shouldJump } from './domain/utils';
 import minimax from './domain/minimax';
 import Node from './entities/Node';
 import CellModel from './entities/CellModel';
 import { PositionCellType } from './types';
 import delay from './helpers/delay';
 import useCheckersState from './hooks/useCheckersState';
-import { Figure } from './helpers/constants';
 
 const App = () => {
   const { state, updateComputerTurn, updatePlayerTurn, resetState, updateTargetPosition } = useCheckersState();
@@ -58,10 +57,12 @@ const App = () => {
       const currentY = currentCell.y;
       const targetX = Number(targetPosition.x);
       const targetY = Number(targetPosition.y);
+      if (![targetX, targetY].every(Number.isInteger)) return;
+
       const newMove = [currentX, currentY, targetX, targetY].toString();
 
       if (availableMoves.some((move) => move.toString() === newMove)) {
-        newBoard = makeAmove({ board: state.board, currentX, currentY, targetX, targetY, king: Figure.PlayerKing });
+        newBoard = applyMove(state.board, [currentX, currentY, targetX, targetY]).board;
         let computerPieces = state.computerPieces;
         if (shouldPlayerJump(state.board, currentX, currentY)) computerPieces--;
 
