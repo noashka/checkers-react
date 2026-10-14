@@ -30,6 +30,6 @@ describe('test domain utils', () => {
     const nextCell = result[4][1];
 
     expect(currentCell.figure).toBe('');
-    expect(nextCell.figure).toBe('b41');
+    expect(nextCell.figure).toBe(Figure.player);
   });
 });

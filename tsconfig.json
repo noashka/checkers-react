@@ -1,18 +1,16 @@
 {
   "compilerOptions": {
-    "baseUrl": "./src",
-    "target": "ES2018",
-    "sourceMap": true,
+    "target": "ES2022",
     "module": "esnext",
-    "moduleResolution": "node",
-    "jsx": "react",
-    "preserveConstEnums": true,
-    "removeComments": false,
-    "lib": ["es7", "dom"],
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "dom", "dom.iterable"],
+    "types": ["vitest/globals", "vite/client"],
     "skipLibCheck": true,
+    "noEmit": true,
+    "strict": false,
     "noImplicitAny": true,
     "allowSyntheticDefaultImports": true
-  }
+  },
+  "include": ["src", "config", "vite.config.ts"]
 }
