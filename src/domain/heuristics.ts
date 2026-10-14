@@ -9,59 +9,58 @@ const EDGE_BONUS = 7;
 const THREAT_PENALTY = 3;
 const ATTACK_BONUS = 6;
 
-const isSideAt = (board: CellModel[][], x: number, y: number, side: Side) =>
-  inBounds(board, x, y) && sideOf(board[x][y].figure) === side;
+const ALL_DIRECTIONS = directionsOf(Figure.PlayerKing);
 
-const isPlayerKingAt = (board: CellModel[][], x: number, y: number) =>
-  inBounds(board, x, y) && board[x][y].figure === Figure.PlayerKing;
+const opponentOf = (side: Side): Side => (side === 'computer' ? 'player' : 'computer');
 
 // the landing square of a jump has to be on the board as well as free
 const isEmptyAt = (board: CellModel[][], x: number, y: number) => inBounds(board, x, y) && !board[x][y].figure;
 
-/** How many opposing pieces could capture the computer piece on (i, j) */
-const countThreats = (board: CellModel[][], i: number, j: number) => {
-  let threats = 0;
+/** How many opposing pieces could capture the piece on (i, j) */
+const countThreats = (board: CellModel[][], i: number, j: number, side: Side) =>
+  ALL_DIRECTIONS.filter(([dx, dy]) => {
+    if (!inBounds(board, i + dx, j + dy)) return false;
 
-  if (isSideAt(board, i + 1, j - 1, 'player') && isEmptyAt(board, i - 1, j + 1)) threats++;
-  if (isSideAt(board, i + 1, j + 1, 'player') && isEmptyAt(board, i - 1, j - 1)) threats++;
-  if (isPlayerKingAt(board, i - 1, j - 1) && isEmptyAt(board, i + 1, j + 1)) threats++;
-  if (isPlayerKingAt(board, i - 1, j + 1) && isEmptyAt(board, i + 1, j - 1)) threats++;
+    const attacker = board[i + dx][j + dy].figure;
+    const jumpsTowardsUs = directionsOf(attacker).some(([ax, ay]) => ax === -dx && ay === -dy);
 
-  return threats;
-};
+    return sideOf(attacker) === opponentOf(side) && jumpsTowardsUs && isEmptyAt(board, i - dx, j - dy);
+  }).length;
 
-/** How many opposing pieces the computer piece on (i, j) could capture */
-const countAttacks = (board: CellModel[][], i: number, j: number) =>
+/** How many opposing pieces the piece on (i, j) could capture */
+const countAttacks = (board: CellModel[][], i: number, j: number, side: Side) =>
   directionsOf(board[i][j].figure).filter(
-    ([dx, dy]) => isSideAt(board, i + dx, j + dy, 'player') && isEmptyAt(board, i + 2 * dx, j + 2 * dy),
+    ([dx, dy]) =>
+      inBounds(board, i + dx, j + dy) &&
+      sideOf(board[i + dx][j + dy].figure) === opponentOf(side) &&
+      isEmptyAt(board, i + 2 * dx, j + 2 * dy),
   ).length;
 
+const evaluatePiece = (board: CellModel[][], i: number, j: number, side: Side) => {
+  const last = board.length - 1;
+  const isKing = board[i][j].figure === Figure.ComputerKing || board[i][j].figure === Figure.PlayerKing;
+  let value = isKing ? KING_WEIGHT : MAN_WEIGHT;
+
+  if (i === 0 || j === 0 || i === last || j === last) value += EDGE_BONUS;
+
+  return value - countThreats(board, i, j, side) * THREAT_PENALTY + countAttacks(board, i, j, side) * ATTACK_BONUS;
+};
+
+/** Static evaluation of the board: positive is good for the computer, negative for the player */
 const calculateHeuristics = (board: CellModel[][]) => {
-  const size = board.length;
-  let weight = 0;
-  let computerCount = 0;
-  let playerCount = 0;
+  let score = 0;
 
-  for (let i = 0; i < size; i++) {
-    for (let j = 0; j < size; j++) {
-      const { figure } = board[i][j];
-      const side = sideOf(figure);
+  for (let i = 0; i < board.length; i++) {
+    for (let j = 0; j < board.length; j++) {
+      const side = sideOf(board[i][j].figure);
+      if (!side) continue;
 
-      if (side === 'computer') {
-        computerCount++;
-        weight += figure === Figure.ComputerMan ? MAN_WEIGHT : KING_WEIGHT;
-
-        if (i === 0 || j === 0 || i === size - 1 || j === size - 1) weight += EDGE_BONUS;
-
-        weight -= countThreats(board, i, j) * THREAT_PENALTY;
-        weight += countAttacks(board, i, j) * ATTACK_BONUS;
-      } else if (side === 'player') {
-        playerCount++;
-      }
+      const sign = side === 'computer' ? 1 : -1;
+      score += sign * (MATERIAL_WEIGHT + evaluatePiece(board, i, j, side));
     }
   }
 
-  return weight + (computerCount - playerCount) * MATERIAL_WEIGHT;
+  return score;
 };
 
 export default calculateHeuristics;

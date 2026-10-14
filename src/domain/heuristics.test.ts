@@ -7,22 +7,23 @@ describe('calculateHeuristics', () => {
   it('should score an attack from a piece on the edge', () => {
     const board = boardFrom([EMPTY_ROW, EMPTY_ROW, 'c . . . . .', '. p . . . .', EMPTY_ROW, EMPTY_ROW]);
 
-    // man 5 + edge 7 + attack 6, material is even
-    expect(calculateHeuristics(board)).toBe(18);
+    // computer: man 5 + edge 7 + attack 6; player: man 5 - threat 3
+    expect(calculateHeuristics(board)).toBe(16);
   });
 
   it('should score an attack from the second row', () => {
     const board = boardFrom([EMPTY_ROW, '. . c . . .', '. . . p . .', EMPTY_ROW, EMPTY_ROW, EMPTY_ROW]);
 
-    // man 5 + attack 6 - threat 3 (the attacked man can capture back towards the empty (0, 1))
-    expect(calculateHeuristics(board)).toBe(8);
+    // both men attack each other and are attacked: 5 + 6 - 3 each
+    expect(calculateHeuristics(board)).toBe(0);
   });
 
   it('should not count a jump that would land outside the board as an attack', () => {
     const board = boardFrom([EMPTY_ROW, EMPTY_ROW, '. c . . . .', 'p . . . . .', EMPTY_ROW, EMPTY_ROW]);
 
-    // man 5 - threat 3, no attack: the landing square (4, -1) does not exist
-    expect(calculateHeuristics(board)).toBe(2);
+    // computer man 5 - threat 3, no attack: the landing square (4, -1) does not exist
+    // player man 5 + edge 7 + attack 6
+    expect(calculateHeuristics(board)).toBe(-16);
   });
 
   it('should let a king attack backwards but not a man', () => {
@@ -30,9 +31,35 @@ describe('calculateHeuristics', () => {
     const king = boardFrom(rows);
     const man = boardFrom(rows.map((row) => row.replace('C', 'c')));
 
-    // king 10 + attack 6, the man behind it cannot capture a king
-    expect(calculateHeuristics(king)).toBe(16);
-    // man 5, it cannot capture backwards
-    expect(calculateHeuristics(man)).toBe(5);
+    // king 10 + attack 6 against the man 5 - threat 3
+    expect(calculateHeuristics(king)).toBe(14);
+    // man 5 cannot capture backwards, so neither side attacks
+    expect(calculateHeuristics(man)).toBe(0);
+  });
+
+  it('should be symmetric: mirroring the board and swapping sides negates the score', () => {
+    const swap = (char: string) => ({ c: 'p', C: 'P', p: 'c', P: 'C' })[char] ?? char;
+    const mirror = (rows: string[]) => [...rows].reverse().map((row) => row.split(' ').map(swap).join(' '));
+    const chars = ['.', '.', '.', 'c', 'C', 'p', 'P'];
+    // deterministic pseudo-random numbers keep the test reproducible
+    let seed = 42;
+    const next = () => (seed = (seed * 1103515245 + 12345) % 2147483648) >> 4;
+
+    for (let n = 0; n < 200; n++) {
+      const rows = Array.from({ length: 8 }, () =>
+        Array.from({ length: 8 }, () => chars[next() % chars.length]).join(' '),
+      );
+
+      expect(calculateHeuristics(boardFrom(mirror(rows))) + calculateHeuristics(boardFrom(rows))).toBe(0);
+    }
+  });
+
+  it('should value material', () => {
+    const computerOnly = boardFrom([EMPTY_ROW, '. c . . . .', EMPTY_ROW, EMPTY_ROW, EMPTY_ROW, EMPTY_ROW]);
+    const even = boardFrom([EMPTY_ROW, '. c . . . .', EMPTY_ROW, EMPTY_ROW, EMPTY_ROW, '. . . . p .']);
+    const playerOnly = boardFrom([EMPTY_ROW, EMPTY_ROW, EMPTY_ROW, EMPTY_ROW, EMPTY_ROW, '. . . . p .']);
+
+    expect(calculateHeuristics(computerOnly)).toBeGreaterThan(calculateHeuristics(even));
+    expect(calculateHeuristics(even)).toBeGreaterThan(calculateHeuristics(playerOnly));
   });
 });
