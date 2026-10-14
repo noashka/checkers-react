@@ -25,7 +25,7 @@ export const fillBoard = (size = BOARD_SIZE): CellModel[][] => {
 
 export type Move = [fromX: number, fromY: number, toX: number, toY: number];
 
-type Side = 'player' | 'computer';
+export type Side = 'player' | 'computer';
 type Direction = readonly [dx: number, dy: number];
 
 const MAN_DIRECTIONS: Record<Side, Direction[]> = {
@@ -84,7 +84,7 @@ const findPieceMoves = (board: CellModel[][], x: number, y: number) => {
 
 export type Position = { x: number; y: number };
 
-const findSideMoves = (board: CellModel[][], side: Side, chainFrom?: Position | null): Move[] => {
+export const findMoves = (board: CellModel[][], side: Side, chainFrom?: Position | null): Move[] => {
   const steps: Move[] = [];
   const jumps: Move[] = [];
 
@@ -109,15 +109,9 @@ export const findJumpsFrom = (board: CellModel[][], x: number, y: number): Move[
 
 /** Pass chainFrom while the player is in the middle of a capture sequence */
 export const findPlayerAvailableMoves = (board: CellModel[][], chainFrom?: Position | null) =>
-  findSideMoves(board, 'player', chainFrom);
+  findMoves(board, 'player', chainFrom);
 
-export const findAvailableMoves = (board: CellModel[][]) => findSideMoves(board, 'computer');
-
-export const shouldJump = (board: CellModel[][], x: number, y: number) =>
-  sideOf(board[x][y].figure) === 'computer' && findPieceMoves(board, x, y).jumps.length > 0;
-
-export const shouldPlayerJump = (board: CellModel[][], x: number, y: number) =>
-  sideOf(board[x][y].figure) === 'player' && findPieceMoves(board, x, y).jumps.length > 0;
+export const findAvailableMoves = (board: CellModel[][]) => findMoves(board, 'computer');
 
 export type MoveResult = {
   board: CellModel[][];

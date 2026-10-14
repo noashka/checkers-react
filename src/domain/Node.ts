@@ -1,19 +1,22 @@
-import { applyMove, findAvailableMoves, findPlayerAvailableMoves, Move } from './utils';
 import CellModel from '../entities/CellModel';
+import { findTurns, Turn } from './turns';
+import { Move } from './utils';
 
 export default class Node {
   board: CellModel[][];
-  move?: Move;
+  moves: Move[];
+  captures: number;
 
-  constructor(board: CellModel[][], move?: Move) {
+  constructor(board: CellModel[][], moves: Move[] = [], captures = 0) {
     this.board = board;
-    this.move = move;
+    this.moves = moves;
+    this.captures = captures;
   }
 
   getChildren(computerMoves: boolean) {
-    const availableMoves = computerMoves ? findAvailableMoves(this.board) : findPlayerAvailableMoves(this.board);
-
-    return availableMoves.map((move) => new Node(applyMove(this.board, move).board, move));
+    return findTurns(this.board, computerMoves ? 'computer' : 'player').map(
+      ({ board, moves, captures }: Turn) => new Node(board, moves, captures),
+    );
   }
 
   getBoard() {

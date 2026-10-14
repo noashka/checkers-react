@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import Board from './Board';
-import { findPlayerAvailableMoves, findContinuation, applyMove, shouldJump, Move } from './domain/utils';
+import { findPlayerAvailableMoves, findContinuation, applyMove, Move } from './domain/utils';
 import minimax from './domain/minimax';
 import Node from './domain/Node';
 import CellModel from './entities/CellModel';
@@ -115,10 +115,12 @@ const App = () => {
     }
 
     const updatedBoard = dict[minimaxKeys[0]].getBoard();
-    let move = dict[minimaxKeys[0]].move;
-    let playerPieces = state.playerPieces;
-    setComputerNotification(`from [${move[0]}, ${move[1]}] to [${move[2]}, ${move[3]}]`);
-    if (shouldJump(state.board, move[0], move[1])) playerPieces--;
+    const { moves, captures } = dict[minimaxKeys[0]];
+    const playerPieces = state.playerPieces - captures;
+    const [firstMove] = moves;
+    setComputerNotification(
+      `from [${firstMove[0]}, ${firstMove[1]}]` + moves.map(([, , x, y]) => ` to [${x}, ${y}]`).join(''),
+    );
 
     updateComputerTurn({
       board: updatedBoard,
